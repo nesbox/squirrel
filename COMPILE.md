@@ -2,22 +2,22 @@
 
 What is in this distribution?
 
-**squirrel**  
+- **squirrel**  
     static library implementing the compiler and interpreter of the language
 
-**sqstdlib**  
+- **sqstdlib**  
     the standard utility libraries
 
-**sq**  
+- **sq**  
     stand alone interpreter
 
-**doc**  
+- **doc**  
     The manual
 
-**etc**  
+- **etc**  
     a minimalistic embedding sample
 
-**samples**  
+- **samples**  
     samples programs
 
 
@@ -39,5 +39,7 @@ Visual Studio editor.
 Make sure to install required compiler tools for C++ for your specific
 platform and CMake (at least 3.21 version).
 
- $ cmake . --preset [preset_name] # For available presets checkout CMakePresets.json file
- $ cmake --build . --preset [preset_name]
+```cmake
+cmake . --preset [preset_name] # For available presets checkout CMakePresets.json file
+cmake --build . --preset [preset_name]
+```
