@@ -4,7 +4,7 @@
  * Windows (x86, x64)
  * Linux (x64, arm, arm64)
 
-## References
+## Reference
 - project page: http://www.squirrel-lang.org
 - documentation #1: http://squirrel-lang.org/squirreldoc/reference/index.html
 - documentation #2: https://developer.electricimp.com/squirrel
