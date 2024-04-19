@@ -5,7 +5,6 @@
  * Linux (x64, arm, arm64)
 
 ## Reference
-- project page: http://www.squirrel-lang.org
 - documentation #1: https://gothicmultiplayerteam.gitlab.io/dependencies/squirrel
 - documentation #2: https://developer.electricimp.com/squirrel
 - author: alberto@demichelis.net
