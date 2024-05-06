@@ -168,6 +168,21 @@ SQSharedState::~SQSharedState()
         _systemstrings->back().Null();
         _systemstrings->pop_back();
     }
+#ifndef NO_GARBAGE_COLLECTOR
+    SQCollectable* t = _gc_chain;
+    SQCollectable* nx = NULL;
+    if (t) {
+        t->_uiRef++;
+        while (t) {
+            t->Finalize();
+            nx = t->_next;
+            if (nx) nx->_uiRef++;
+            if (--t->_uiRef == 0)
+                t->Release();
+            t = nx;
+        }
+    }
+#endif
     _thread(_root_vm)->Finalize();
     _root_vm.Null();
     _table_default_delegate.Null();
@@ -182,21 +197,8 @@ SQSharedState::~SQSharedState()
     _weakref_default_delegate.Null();
     _refs_table.Finalize();
 #ifndef NO_GARBAGE_COLLECTOR
-    SQCollectable *t = _gc_chain;
-    SQCollectable *nx = NULL;
-    if(t) {
-        t->_uiRef++;
-        while(t) {
-            t->Finalize();
-            nx = t->_next;
-            if(nx) nx->_uiRef++;
-            if(--t->_uiRef == 0)
-                t->Release();
-            t = nx;
-        }
-    }
-    assert(_gc_chain==NULL); //just to proove a theory
-    while(_gc_chain){
+    assert(_gc_chain == NULL); //just to proove a theory
+    while (_gc_chain) {
         _gc_chain->_uiRef++;
         _gc_chain->Release();
     }
