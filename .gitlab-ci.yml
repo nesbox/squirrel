@@ -1,0 +1,62 @@
+variables:
+  VERSION: "1.0.0"
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+stages:
+- build
+- release
+
+build:docs:
+  stage: build
+  image: python:3.9-alpine
+  when: manual
+  script:
+    - cd doc
+    - pip install -r source/requirements.txt
+    - sphinx-build -b html source ../sq_docs
+  artifacts:
+    name: "sq_docs"
+    paths:
+      - sq_docs/
+
+pages:
+  stage: build
+  needs: [build:docs]
+  script:
+    - mv sq_docs public
+  after_script:
+    - 'echo "Online documentation available under: ${CI_PAGES_URL}"'
+  artifacts:
+    paths:
+      - public
+
+docs:
+  stage: build
+  needs: [build:docs]
+  script:
+    - echo "Docs_job_id=${CI_JOB_ID}" >> job.env
+  artifacts:
+    name: "sq_docs"
+    paths:
+      - sq_docs/
+    expire_in: never
+    reports:
+       dotenv: job.env
+
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  when: manual
+  needs: [pages, docs]
+  script:
+    - echo "Created ${VERSION} release"
+  release:
+    tag_name: "${VERSION}"
+    description: "./CHANGELOG.md"
+    assets:
+      links:
+        - name: "sq_docs"
+          url: "${CI_PROJECT_URL}/-/jobs/${Docs_job_id}/artifacts/download"
