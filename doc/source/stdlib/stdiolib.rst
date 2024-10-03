@@ -119,6 +119,26 @@ The file class
 | 'd'          | 64bits float                                                                   |  float               |
 +--------------+--------------------------------------------------------------------------------+----------------------+
 
+.. js:function:: file.read(type)
+
+    :param int|string type: type of the number to read
+
+    reads a content from the stream.
+
+    `type` can have the following values:
+
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "\*a"       |  reads the whole file content                                                           |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "\*l"       |  reads the next line (doesn't contain '\n' character at the end)                        |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "\*L"       |  reads the next line (contains '\n' character at the end)                               |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "\*number"  |  reads the next number of bytes from file                                               |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  int         |  reads the next number of bytes from file                                               |
+    +--------------+-----------------------------------------------------------------------------------------+
+
 .. js:function:: file.resize(size)
 
     :param int size: the new size of the blob in bytes
@@ -178,6 +198,12 @@ The file class
 +--------------+--------------------------------------------------------------------------------+
 | 'd'          | 64bits float                                                                   |
 +--------------+--------------------------------------------------------------------------------+
+
+.. js:function:: file.write(text)
+
+    :param string text: the source text containing the data to be written
+
+    writes a string in the stream
 
 
 --------------

@@ -14,22 +14,31 @@ Built-in Functions
 Global Symbols
 ^^^^^^^^^^^^^^
 
+.. js:function:: getstacktop()
+
+returns the index of the top of the stack (useful for debugging)
+
+.. js:function:: getstacksize()
+
+returns the current stack size (useful for debugging)
+
 .. js:function:: array(size,[fill])
 
 creates and returns array of a specified size. If the optional parameter fill is specified its value will be used to fill the new array's slots. If the fill parameter is omitted, null is used instead.
 
-.. js:function:: seterrorhandler(func)
+.. js:function:: geterrorhandler()
 
+returns the runtime error handler
+
+.. js:function:: seterrorhandler(func)
 
 sets the runtime error handler
 
 .. js:function:: callee()
 
-
 returns the currently running closure
 
 .. js:function:: setdebughook(hook_func)
-
 
 sets the debug hook
 
@@ -52,6 +61,34 @@ returns the const table of the VM.
 .. js:function:: setconsttable(table)
 
 sets the const table of the VM; returns the previous const table.
+
+.. js:function:: getdefaultdelegate(type)
+
+    :param string type: the type name
+
+    returns a delegate for specific builtin type or null if delegate for specific type doesn't exists.
+
+    `type` can have the following values:
+
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "number"    |  default numbers delegate (integers & floats)                                           |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "string"    |  default string delegate                                                                |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "array"     |  default array delegate                                                                 |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "table"     |  default table delegate                                                                 |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "class"     |  default class delegate                                                                 |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "instance"  |  default instance delegate                                                              |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "weakref"   |  default weakref delegate                                                               |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "generator" |  default generator delegate                                                             |
+    +--------------+-----------------------------------------------------------------------------------------+
+    |  "thread"    |  default thread delegate                                                                |
+    +--------------+-----------------------------------------------------------------------------------------+
 
 .. js:function:: assert(exp, [message])
 

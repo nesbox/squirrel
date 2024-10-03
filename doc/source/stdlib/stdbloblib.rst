@@ -96,6 +96,12 @@ A blob can also be accessed byte by byte through the `[]` operator.
 | 'd'          | 64bits float                                                                   |  float               |
 +--------------+--------------------------------------------------------------------------------+----------------------+
 
+.. js:function:: blob.read(size)
+
+    :param int size: number of bytes to read
+
+    read n bytes from the stream and returns them as string
+
 .. js:function:: blob.resize(size)
 
     :param int size: the new size of the blob in bytes
@@ -164,6 +170,15 @@ A blob can also be accessed byte by byte through the `[]` operator.
 | 'd'          | 64bits float                                                                   |
 +--------------+--------------------------------------------------------------------------------+
 
+.. js:function:: blob.write(text)
+
+    :param string text: the source text containing the data to be written
+
+    writes a string in the stream
+
+.. js:function:: blob.tostring()
+
+returns the whole blob converted to string.
 
 ------
 C API

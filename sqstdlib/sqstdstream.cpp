@@ -97,6 +97,22 @@ SQInteger _stream_readn(HSQUIRRELVM v)
     return 1;
 }
 
+SQInteger _stream_read(HSQUIRRELVM v)
+{
+    SETUP_STREAM(v);
+
+    SQInteger bytes_to_read;
+    sq_getinteger(v, 2, &bytes_to_read);
+
+    SQChar* buffer = (SQChar*)sq_malloc(bytes_to_read);
+
+    SQInteger read_bytes = self->Read(&buffer[0], bytes_to_read);
+    sq_pushstring(v, &buffer[0], read_bytes);
+
+    sq_free(buffer, bytes_to_read);
+    return 1;
+}
+
 SQInteger _stream_writeblob(HSQUIRRELVM v)
 {
     SQUserPointer data;
@@ -180,6 +196,17 @@ SQInteger _stream_writen(HSQUIRRELVM v)
     return 0;
 }
 
+SQRESULT _stream_write(HSQUIRRELVM v)
+{
+    SETUP_STREAM(v);
+
+    const SQChar* text;
+    sq_getstring(v, 2, &text);
+
+    self->Write((void*)text, scstrlen(text) * sizeof(SQChar));
+    return 0;
+}
+
 SQInteger _stream_seek(HSQUIRRELVM v)
 {
     SETUP_STREAM(v);
@@ -241,8 +268,10 @@ SQInteger _stream_eos(HSQUIRRELVM v)
 static const SQRegFunction _stream_methods[] = {
     _DECL_STREAM_FUNC(readblob,2,_SC("xn")),
     _DECL_STREAM_FUNC(readn,2,_SC("xn")),
+    _DECL_STREAM_FUNC(read,2,_SC("xn")),
     _DECL_STREAM_FUNC(writeblob,-2,_SC("xx")),
     _DECL_STREAM_FUNC(writen,3,_SC("xnn")),
+    _DECL_STREAM_FUNC(write,2,_SC("xs")),
     _DECL_STREAM_FUNC(seek,-2,_SC("xnn")),
     _DECL_STREAM_FUNC(tell,1,_SC("x")),
     _DECL_STREAM_FUNC(len,1,_SC("x")),

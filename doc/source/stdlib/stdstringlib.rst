@@ -200,6 +200,33 @@ The regexp class
         match number[02] Test
         match number[03] ;
 
+.. js:function:: regexp.captureall(str [, start])
+
+    returns an array of tables containing two indexes ("begin" and "end") of
+    all of the matches of the regular expression in the string `str`.
+    An array entry is created for each captured sub expressions. If no match occurs returns null.
+    The search starts from the index `start`
+    of the string; if `start` is omitted the search starts from the beginning of the string.
+
+    ::
+
+        local ex = regexp(@"(\d+)");
+        local string = "10 20 30 40 5!";
+        local res = ex.capture(string);
+        foreach(i,val in res)
+        {
+            print(format("match number[%02d] %s\n",
+                    i,string.slice(val.begin,val.end))); //prints "Test"
+        }
+
+        ...
+        will print
+        match number[00] 10
+        match number[01] 20
+        match number[02] 30
+        match number[03] 40
+        match number[04] 5
+
 .. js:function:: regexp.match(str)
 
     returns a true if the regular expression matches the string

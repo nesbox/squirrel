@@ -167,6 +167,14 @@ static SQInteger _blob__cloned(HSQUIRRELVM v)
     return 0;
 }
 
+static SQInteger _blob__tostring(HSQUIRRELVM v)
+{
+    SETUP_BLOB(v);
+
+    sq_pushstring(v, (const SQChar*)self->GetBuf(), self->Len() / sizeof(SQChar));
+    return 1;
+}
+
 #define _DECL_BLOB_FUNC(name,nparams,typecheck) {_SC(#name),_blob_##name,nparams,typecheck}
 static const SQRegFunction _blob_methods[] = {
     _DECL_BLOB_FUNC(constructor,-1,_SC("xn")),
@@ -178,6 +186,7 @@ static const SQRegFunction _blob_methods[] = {
     _DECL_BLOB_FUNC(_typeof,1,_SC("x")),
     _DECL_BLOB_FUNC(_nexti,2,_SC("x")),
     _DECL_BLOB_FUNC(_cloned,2,_SC("xx")),
+    _DECL_BLOB_FUNC(_tostring,1,_SC("x")),
     {NULL,(SQFUNCTION)0,0,NULL}
 };
 
