@@ -1,11 +1,14 @@
 /* see copyright notice in squirrel.h */
 #include <new>
+#include <string.h>
 #include <stdio.h>
 #include <squirrel.h>
 #include <sqstdio.h>
 #include "sqstdstream.h"
 
+#define FILEBUFFERSIZE 8192
 #define SQSTD_FILE_TYPE_TAG ((SQUnsignedInteger)(SQSTD_STREAM_TYPE_TAG | 0x00000001))
+
 //basic API
 SQFILE sqstd_fopen(const SQChar *filename ,const SQChar *mode)
 {
@@ -151,6 +154,151 @@ static SQInteger _file_constructor(HSQUIRRELVM v)
     return 0;
 }
 
+static bool _read_line(HSQUIRRELVM v, FILE* f, bool chop)
+{
+    int c;
+    size_t offset = 0;
+    size_t buffer_size = FILEBUFFERSIZE + 2;
+    SQChar* buffer = (SQChar*)sq_malloc(buffer_size);
+
+    do {  /* may need to read several chunks to get whole line */
+        char* buff = &buffer[offset];
+        int i = 0;
+
+        while (i < FILEBUFFERSIZE && (c = getc(f)) != EOF && c != '\n')
+            buff[i++] = c;  /* read up to end of line or buffer limit */
+
+        buffer = (SQChar*)sq_realloc(buffer, buffer_size, buffer_size + i);
+
+        buffer_size += i;
+        offset += i;
+    } while (c != EOF && c != '\n');  /* repeat until end of line */
+
+    if (!chop && c == '\n')  /* want a newline and have one? */
+    {
+        buffer[offset] = '\n';
+        ++offset;
+    }
+
+    buffer[offset] = '\0';
+
+    sq_pushstring(v, &buffer[0], offset);
+    sq_free(buffer, buffer_size);
+
+    /* return ok if read something (either a newline or something else) */
+    return (c == '\n' || offset > 0);
+}
+
+static void _read_all(HSQUIRRELVM v, FILE* f)
+{
+    size_t size = 0;
+    size_t chunkSize = 0;
+
+    SQChar* buffer = (SQChar*)sq_malloc(size);
+
+    do {  /* read file in chunks of FILEBUFFERSIZE bytes */
+        chunkSize = fread(&buffer[size], sizeof(SQChar), FILEBUFFERSIZE, f);
+        buffer = (SQChar*)sq_realloc(buffer, size, size + FILEBUFFERSIZE);
+
+        size += chunkSize;
+    } while (chunkSize == FILEBUFFERSIZE);
+
+    sq_pushstring(v, &buffer[0], size);
+    sq_free(buffer, size);
+}
+
+static bool _read_chars(HSQUIRRELVM v, FILE* f, size_t n)
+{
+    SQChar* buffer = (SQChar*)sq_malloc(n);
+
+    size_t bytes = fread(&buffer[0], sizeof(SQChar), n, (FILE*)f);  /* try to read 'n' chars */
+    if (bytes != 0) buffer[bytes] = '\0';
+
+    sq_pushstring(v, &buffer[0], bytes);
+    sq_free(buffer, n);
+
+    return (bytes > 0);  /* true if read something */
+}
+
+static int _test_eof(HSQUIRRELVM v, FILE* f) {
+    int c = getc(f);
+    ungetc(c, f);  /* no-op when c == EOF */
+    sq_pushstring(v, "", -1);
+    return (c != EOF);
+}
+
+SQRESULT _file_read(HSQUIRRELVM v)
+{
+    SQInteger argsCount = sq_gettop(v) - 1;
+    bool success = true;
+
+    if (argsCount > 1)
+        return sq_throwerror(v, "wrong number of parameters");
+
+    SQFile* self = NULL;
+    if (SQ_FAILED(sq_getinstanceup(v, 1, (SQUserPointer*)&self, (SQUserPointer)SQSTD_FILE_TYPE_TAG, SQTrue))
+        || self == NULL)
+        return SQ_ERROR;
+
+    if (argsCount == 0)  /* no arguments? */
+        success = _read_line(v, (FILE*)self->GetHandle(), true);
+    else
+    {
+        SQObjectType pType = sq_gettype(v, 2);
+
+        switch (pType)
+        {
+            case OT_INTEGER:
+            {
+                SQInteger p;
+                sq_getinteger(v, 2, &p);
+
+                success = (p == 0) ? _test_eof(v, (FILE*)self->GetHandle()) : _read_chars(v, (FILE*)self->GetHandle(), p);
+                break;
+            }
+
+            case OT_STRING:
+            {
+                SQChar* p;
+                sq_getstring(v, 2, (const SQChar**)&p);
+
+                if (*p == '*')
+                    ++p;
+
+                switch (*p)
+                {
+                    case 'L':
+                        success = _read_line(v, (FILE*)self->GetHandle(), false);
+                        break;
+
+                    case 'l':
+                        success = _read_line(v, (FILE*)self->GetHandle(), true);
+                        break;
+
+                    case 'a':
+                        _read_all(v, (FILE*)self->GetHandle());
+                        break;
+
+                    default:
+                        return sq_throwerror(v, "invalid format");
+                }
+
+                break;
+            }
+
+            default:
+                return sq_throwerror(v, "wrong parameter");
+        }
+    }
+
+    if (!success) {
+        sq_pop(v, 1); /* remove last result */
+        sq_pushnull(v); /* push null instead */
+    }
+
+    return 1;
+}
+
 static SQInteger _file_close(HSQUIRRELVM v)
 {
     SQFile *self = NULL;
@@ -167,6 +315,7 @@ static SQInteger _file_close(HSQUIRRELVM v)
 static const SQRegFunction _file_methods[] = {
     _DECL_FILE_FUNC(constructor,3,_SC("x")),
     _DECL_FILE_FUNC(_typeof,1,_SC("x")),
+    _DECL_FILE_FUNC(read, 0, _SC("x")),
     _DECL_FILE_FUNC(close,1,_SC("x")),
     {NULL,(SQFUNCTION)0,0,NULL}
 };

@@ -426,39 +426,90 @@ static void _addrexmatch(HSQUIRRELVM v,const SQChar *str,const SQChar *begin,con
 static SQInteger _regexp_search(HSQUIRRELVM v)
 {
     SETUP_REX(v);
-    const SQChar *str,*begin,*end;
-    SQInteger start = 0;
+    const SQChar *str;
     sq_getstring(v,2,&str);
+
+    SQInteger start = 0;
     if(sq_gettop(v) > 2) sq_getinteger(v,3,&start);
+
+    const SQChar *begin, *end;
     if(sqstd_rex_search(self,str+start,&begin,&end) == SQTrue) {
         _addrexmatch(v,str,begin,end);
         return 1;
     }
+
     return 0;
 }
 
 static SQInteger _regexp_capture(HSQUIRRELVM v)
 {
     SETUP_REX(v);
-    const SQChar *str,*begin,*end;
+   
+    const SQChar* str;
+    sq_getstring(v, 2, &str);
+
     SQInteger start = 0;
-    sq_getstring(v,2,&str);
-    if(sq_gettop(v) > 2) sq_getinteger(v,3,&start);
-    if(sqstd_rex_search(self,str+start,&begin,&end) == SQTrue) {
-        SQInteger n = sqstd_rex_getsubexpcount(self);
-        SQRexMatch match;
-        sq_newarray(v,0);
-        for(SQInteger i = 0;i < n; i++) {
-            sqstd_rex_getsubexp(self,i,&match);
-            if(match.len > 0)
-                _addrexmatch(v,str,match.begin,match.begin+match.len);
+    if (sq_gettop(v) > 2) sq_getinteger(v, 3, &start);
+
+    const SQChar *begin, *end;
+    if (sqstd_rex_search(self, str + start, &begin, &end) == SQTrue) {
+        sq_newarray(v, 0);
+
+        for (SQInteger i = 0, n = sqstd_rex_getsubexpcount(self); i < n; i++) {
+            SQRexMatch match;
+            sqstd_rex_getsubexp(self, i, &match);
+
+            if (match.len != -1)
+                _addrexmatch(v, str, match.begin, match.begin + match.len);
             else
-                _addrexmatch(v,str,str,str); //empty match
-            sq_arrayappend(v,-2);
+                sq_pushnull(v);
+
+            sq_arrayappend(v, -2);
         }
         return 1;
     }
+
     return 0;
+}
+
+static SQInteger _regexp_captureall(HSQUIRRELVM v)
+{
+    SETUP_REX(v);
+
+    const SQChar* str;
+    sq_getstring(v, 2, &str);
+
+    SQInteger start = 0;
+    if (sq_gettop(v) > 2) sq_getinteger(v, 3, &start);
+
+    SQBool array_created = false;
+
+    const SQChar* begin, * end;
+    while (sqstd_rex_search(self, str + start, &begin, &end) == SQTrue) {
+        if (!array_created) {
+            sq_newarray(v, 0);
+            array_created = true;
+        }
+
+        for (SQInteger i = 1, n = sqstd_rex_getsubexpcount(self); i < n; i++) {
+            SQRexMatch match;
+            sqstd_rex_getsubexp(self, i, &match);
+
+            if (match.len != -1) {
+                _addrexmatch(v, str, match.begin, match.begin + match.len);
+                start = match.begin - str + match.len + 1;
+            }
+            else
+                sq_pushnull(v);
+
+            sq_arrayappend(v, -2);
+        }
+    }
+
+    if (!array_created)
+        sq_pushnull(v);
+
+    return 1;
 }
 
 static SQInteger _regexp_subexpcount(HSQUIRRELVM v)
@@ -498,6 +549,7 @@ static const SQRegFunction rexobj_funcs[]={
     _DECL_REX_FUNC(search,-2,_SC("xsn")),
     _DECL_REX_FUNC(match,2,_SC("xs")),
     _DECL_REX_FUNC(capture,-2,_SC("xsn")),
+    _DECL_REX_FUNC(captureall,-2,_SC("xsn")),
     _DECL_REX_FUNC(subexpcount,1,_SC("x")),
     _DECL_REX_FUNC(_typeof,1,_SC("x")),
     {NULL,(SQFUNCTION)0,0,NULL}

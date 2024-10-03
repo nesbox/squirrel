@@ -71,7 +71,6 @@ static SQInteger base_getconsttable(HSQUIRRELVM v)
     return 1;
 }
 
-
 static SQInteger base_setroottable(HSQUIRRELVM v)
 {
     SQObjectPtr o = v->_roottable;
@@ -85,6 +84,55 @@ static SQInteger base_setconsttable(HSQUIRRELVM v)
     SQObjectPtr o = _ss(v)->_consts;
     if(SQ_FAILED(sq_setconsttable(v))) return SQ_ERROR;
     v->Push(o);
+    return 1;
+}
+
+static SQRESULT base_getdefaultdelegate(HSQUIRRELVM v)
+{
+    const SQChar* type;
+    sq_getstring(v, 2, &type);
+
+    if (strncmp(type, "number", sizeof("number")) == 0)
+        sq_getdefaultdelegate(v, OT_INTEGER);
+    else if (strncmp(type, "string", sizeof("string")) == 0)
+        sq_getdefaultdelegate(v, OT_STRING);
+    else if (strncmp(type, "array", sizeof("array")) == 0)
+        sq_getdefaultdelegate(v, OT_ARRAY);
+    else if (strncmp(type, "table", sizeof("table")) == 0)
+        sq_getdefaultdelegate(v, OT_TABLE);
+    else if (strncmp(type, "class", sizeof("class")) == 0)
+        sq_getdefaultdelegate(v, OT_CLASS);
+    else if (strncmp(type, "instance", sizeof("instance")) == 0)
+        sq_getdefaultdelegate(v, OT_INSTANCE);
+    else if (strncmp(type, "weakref", sizeof("weakref")) == 0)
+        sq_getdefaultdelegate(v, OT_INSTANCE);
+    else if (strncmp(type, "function", sizeof("function")) == 0)
+        sq_getdefaultdelegate(v, OT_CLOSURE);
+    else if (strncmp(type, "generator", sizeof("generator")) == 0)
+        sq_getdefaultdelegate(v, OT_GENERATOR);
+    else if (strncmp(type, "thread", sizeof("thread")) == 0)
+        sq_getdefaultdelegate(v, OT_THREAD);
+    else
+        sq_pushnull(v);
+
+    return 1;
+}
+
+static SQRESULT base_getstacktop(HSQUIRRELVM vm)
+{
+    sq_pushinteger(vm, sq_gettop(vm));
+    return 1;
+}
+
+static SQRESULT base_getstacksize(HSQUIRRELVM vm)
+{
+    sq_pushinteger(vm, vm->_stack.size());
+    return 1;
+}
+
+static SQRESULT base_geterrorhandler(HSQUIRRELVM v)
+{
+    sq_pushobject(v, v->_errorhandler);
     return 1;
 }
 
@@ -282,6 +330,9 @@ static SQInteger base_callee(HSQUIRRELVM v)
 
 static const SQRegFunction base_funcs[]={
     //generic
+    {_SC("getstacktop"),base_getstacktop,1, NULL},
+    {_SC("getstacksize"),base_getstacksize,1, NULL},
+    {_SC("geterrorhandler"),base_geterrorhandler,1, NULL},
     {_SC("seterrorhandler"),base_seterrorhandler,2, NULL},
     {_SC("setdebughook"),base_setdebughook,2, NULL},
     {_SC("enabledebuginfo"),base_enabledebuginfo,2, NULL},
@@ -290,6 +341,7 @@ static const SQRegFunction base_funcs[]={
     {_SC("setroottable"),base_setroottable,2, NULL},
     {_SC("getconsttable"),base_getconsttable,1, NULL},
     {_SC("setconsttable"),base_setconsttable,2, NULL},
+    {_SC("getdefaultdelegate"),base_getdefaultdelegate,2, ".s"},
     {_SC("assert"),base_assert,-2, NULL},
     {_SC("print"),base_print,2, NULL},
     {_SC("error"),base_error,2, NULL},

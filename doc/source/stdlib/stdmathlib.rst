@@ -15,6 +15,31 @@ Squirrel API
 Global Symbols
 +++++++++++++++
 
+.. js:function:: min(...|array)
+
+    returns the smallest item from passed arguments
+
+.. js:function:: max(...|array)
+
+    returns the largest item from passed arguments
+
+.. js:function:: clamp(x, min, max)
+
+    returns the clamped x value between min and max range
+
+.. js:function:: round(x, digits=0)
+
+    returns the rounded x value up to specified digit
+
+.. js:function:: random(min=null, max=null)
+
+    returns a pseudorandom integer in the range min, max.
+    If you don't pass `min`, `max` arguments, pseudorandom float in range <0.0, 1.0) is returned instead.
+
+.. js:function:: randomseed(seed)
+
+    sets the starting point for generating a series of pseudorandom integers by `random` function
+
 .. js:function:: abs(x)
 
     returns the absolute value of `x` as an integer
@@ -81,7 +106,7 @@ Global Symbols
 
 .. js:function:: srand(seed)
 
-    sets the starting point for generating a series of pseudorandom integers
+    sets the starting point for generating a series of pseudorandom integers by `rand` function
 
 .. js:function:: tan(x)
 
