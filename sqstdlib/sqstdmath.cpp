@@ -144,6 +144,13 @@ static SQRESULT math_clamp(HSQUIRRELVM vm)
 
 			break;
 		}
+
+		default:
+		{
+			sq_pushnull(vm);
+			break;
+		}
+			
 	}
 
 	return 1;
