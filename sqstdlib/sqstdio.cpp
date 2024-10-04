@@ -632,7 +632,7 @@ static const SQRegFunction iolib_funcs[]={
     _DECL_GLOBALIO_FUNC(loadfile,-2,_SC(".sb")),
     _DECL_GLOBALIO_FUNC(dofile,-2,_SC(".sb")),
     _DECL_GLOBALIO_FUNC(writeclosuretofile,3,_SC(".sc")),
-    _DECL_GLOBALIO_FUNC(readline,-2,_SC(".x")),
+    _DECL_GLOBALIO_FUNC(readline,-1,_SC(".x")),
     {NULL,(SQFUNCTION)0,0,NULL}
 };
 
