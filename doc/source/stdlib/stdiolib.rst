@@ -41,6 +41,9 @@ Global Symbols
     serializes a closure to a bytecode file (destpath). The serialized file can be loaded
     using loadfile() and dofile().
 
+.. js:function:: readline(stream=stdin)
+
+    reads a line from given stream without including `\n` at the end, can be used to read console input.
 
 .. js:data:: stderr
 

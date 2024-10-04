@@ -611,11 +611,28 @@ SQInteger _g_io_dofile(HSQUIRRELVM v)
     return SQ_ERROR; //propagates the error
 }
 
+SQInteger _g_io_readline(HSQUIRRELVM v)
+{
+    SQChar line[8192];
+
+    SQFILE input = (SQFILE)stdin;
+    if (sq_gettop(v) >= 2)
+        sqstd_getfile(v, 2, &input);
+
+    if (fgets(line, sizeof(line), (FILE*)input) != NULL)
+        sq_pushstring(v, line, scstrlen(line) - 1);
+    else
+        sq_pushnull(v);
+
+    return 1;
+}
+
 #define _DECL_GLOBALIO_FUNC(name,nparams,typecheck) {_SC(#name),_g_io_##name,nparams,typecheck}
 static const SQRegFunction iolib_funcs[]={
     _DECL_GLOBALIO_FUNC(loadfile,-2,_SC(".sb")),
     _DECL_GLOBALIO_FUNC(dofile,-2,_SC(".sb")),
     _DECL_GLOBALIO_FUNC(writeclosuretofile,3,_SC(".sc")),
+    _DECL_GLOBALIO_FUNC(readline,-2,_SC(".x")),
     {NULL,(SQFUNCTION)0,0,NULL}
 };
 
