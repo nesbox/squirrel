@@ -1,3 +1,3 @@
 ## Changelog
 
-- Initial docs release
+- Added `try squirrel online` interpreter docs subsite
