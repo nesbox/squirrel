@@ -13,6 +13,7 @@ Contents:
 
    reference/index.rst
    stdlib/index.rst
+   repl/index.rst
 
 
 Indices and tables

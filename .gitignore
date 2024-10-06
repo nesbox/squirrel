@@ -2,11 +2,6 @@
 
 desktop.ini
 
-# Main directory
-
-/build/
-/out/
-
 # Visual Studio
 
 /.vs/
@@ -14,3 +9,7 @@ desktop.ini
 # VS Code
 
 /.vscode/
+
+# Main directory
+
+/out/
