@@ -23,6 +23,7 @@ static void js_append_output(const char* message)
 {
 	EM_ASM({
 		document.getElementById("output").value += UTF8ToString($0);
+		document.getElementById("output").value += "\n";
 	}, message);
 }
 

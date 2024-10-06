@@ -5,6 +5,7 @@
  * Linux (x64, arm, arm64)
 
 ## Reference
-- documentation #1: https://gothicmultiplayerteam.gitlab.io/dependencies/squirrel
-- documentation #2: https://developer.electricimp.com/squirrel
-- author: alberto@demichelis.net
+- official documentation: https://gothicmultiplayerteam.gitlab.io/dependencies/squirrel
+- electric imp documentation (doesn't include every function): https://developer.electricimp.com/squirrel
+- original author: alberto@demichelis.net
+- fork maintainer: Patrix
