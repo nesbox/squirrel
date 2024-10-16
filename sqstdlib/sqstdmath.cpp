@@ -203,6 +203,9 @@ static SQRESULT math_random(HSQUIRRELVM vm)
 	if (top == 3)
 		sq_getinteger(vm, 3, &end);
 
+	if (end < begin)
+		return sq_throwerror(vm, "invalid range");
+
 	std::uniform_int_distribution<SQInteger> distribution(begin, end);
 	sq_pushinteger(vm, distribution(random_engine));
 
