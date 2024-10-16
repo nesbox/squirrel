@@ -208,6 +208,8 @@ The regexp class
     The search starts from the index `start`
     of the string; if `start` is omitted the search starts from the beginning of the string.
 
+    The first element of the returned array(index 0) always contains the complete match.
+
     ::
 
         local ex = regexp(@"(\d+)");

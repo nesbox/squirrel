@@ -491,7 +491,7 @@ static SQInteger _regexp_captureall(HSQUIRRELVM v)
             array_created = true;
         }
 
-        for (SQInteger i = 1, n = sqstd_rex_getsubexpcount(self); i < n; i++) {
+        for (SQInteger i = 0, n = sqstd_rex_getsubexpcount(self); i < n; i++) {
             SQRexMatch match;
             sqstd_rex_getsubexp(self, i, &match);
 
