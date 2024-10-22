@@ -57,7 +57,7 @@ typedef SQInteger SQRESULT;
 
 
 typedef wchar_t SQChar;
-
+#define _SC(a) L##a
 
 #define scstrcmp    wcscmp
 #ifdef _WIN32
@@ -87,18 +87,6 @@ typedef wchar_t SQChar;
 #define MAX_CHAR 0xFFFFFFFF
 #endif
 
-#define _SC(a) L##a
-
-
-#define scisspace   iswspace
-#define scisdigit   iswdigit
-#define scisprint   iswprint
-#define scisxdigit  iswxdigit
-#define scisalpha   iswalpha
-#define sciscntrl   iswcntrl
-#define scisalnum   iswalnum
-
-
 #define sq_rsl(l) ((l)<<WCHAR_SHIFT_MUL)
 
 #else
@@ -124,13 +112,6 @@ typedef char SQChar;
 #define scstrtoul   strtoul
 #define scvsprintf  vsnprintf
 #define scstrstr    strstr
-#define scisspace   isspace
-#define scisdigit   isdigit
-#define scisprint   isprint
-#define scisxdigit  isxdigit
-#define sciscntrl   iscntrl
-#define scisalpha   isalpha
-#define scisalnum   isalnum
 #define scprintf    printf
 #define MAX_CHAR 0xFF
 
@@ -143,4 +124,20 @@ typedef char SQChar;
 #define _PRINT_INT_FMT _SC("%lld")
 #else
 #define _PRINT_INT_FMT _SC("%d")
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int scisspace(int c);
+int scisdigit(int c);
+int scisprint(int c);
+int scisxdigit(int c);
+int sciscntrl(int c);
+int scisalpha(int c);
+int scisalnum(int c);
+
+#ifdef __cplusplus
+} /*extern "C"*/
 #endif
