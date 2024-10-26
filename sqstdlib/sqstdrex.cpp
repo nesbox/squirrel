@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <sqstdstring.h>
+#include <string>
 #include <regex>
 
 struct SQRex {
@@ -21,8 +22,13 @@ SQRex *sqstd_rex_compile(const SQChar *pattern,const SQChar **error)
     }
     catch (std::regex_error& err)
     {
-        *error = err.what();
+        static std::string errorMsg;
+        errorMsg = err.what();
+
+        *error = errorMsg.c_str();
+
        delete self;
+       self = nullptr;
     }
 
     return self;
