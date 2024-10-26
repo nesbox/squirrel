@@ -11,11 +11,12 @@ struct SQRex {
     std::cmatch matches;
 };
 
+static std::string errorMsg;
+
 /* public api */
 SQRex *sqstd_rex_compile(const SQChar *pattern,const SQChar **error)
 {
     SQRex* self = new SQRex();
-    static std::string errorMsg;
 
     try
     {
