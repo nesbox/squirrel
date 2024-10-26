@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <sqstdstring.h>
 #include <regex>
+#include <string>
 
 struct SQRex {
     std::regex regex;
@@ -21,10 +22,10 @@ SQRex *sqstd_rex_compile(const SQChar *pattern,const SQChar **error)
     }
     catch (std::regex_error& err)
     {
-        static SQChar bytes[2048];
+        static std::string errMsg;
 
-        memcpy(bytes, err.what(), strlen(err.what()));
-        *error = bytes;
+        errMsg = err.what();
+        *error = errMsg.c_str();
 
        delete self;
        self = nullptr;
