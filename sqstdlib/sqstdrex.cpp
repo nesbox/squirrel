@@ -15,6 +15,7 @@ struct SQRex {
 SQRex *sqstd_rex_compile(const SQChar *pattern,const SQChar **error)
 {
     SQRex* self = new SQRex();
+    static std::string errorMsg;
 
     try
     {
@@ -22,9 +23,7 @@ SQRex *sqstd_rex_compile(const SQChar *pattern,const SQChar **error)
     }
     catch (std::regex_error& err)
     {
-        static std::string errorMsg;
         errorMsg = err.what();
-
         *error = errorMsg.c_str();
 
        delete self;
