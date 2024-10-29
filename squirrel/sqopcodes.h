@@ -22,6 +22,11 @@ enum CmpOP {
     CMP_3W = 5
 };
 
+enum ExistsOp {
+    EXT = 0,
+    N_EXT = 1
+};
+
 enum NewObjectType {
     NOT_TABLE = 0,
     NOT_ARRAY = 1,

@@ -550,8 +550,18 @@ public:
         case _SC('<'): BIN_EXP(_OP_CMP, &SQCompiler::ShiftExp,CMP_L); break;
         case TK_GE: BIN_EXP(_OP_CMP, &SQCompiler::ShiftExp,CMP_GE); break;
         case TK_LE: BIN_EXP(_OP_CMP, &SQCompiler::ShiftExp,CMP_LE); break;
-        case TK_IN: BIN_EXP(_OP_EXISTS, &SQCompiler::ShiftExp); break;
+        case TK_IN: BIN_EXP(_OP_EXISTS, &SQCompiler::ShiftExp,EXT); break;
         case TK_INSTANCEOF: BIN_EXP(_OP_INSTANCEOF, &SQCompiler::ShiftExp); break;
+        case TK_NOT: {
+            Lex();
+            if (_token == TK_IN)
+            {
+                BIN_EXP(_OP_EXISTS, &SQCompiler::ShiftExp,N_EXT); 
+                break;
+            }
+            else
+                Error(_SC("Exptected in after not")); break;
+        }
         default: return;
         }
     }
