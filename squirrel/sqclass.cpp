@@ -18,8 +18,10 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
     _udsize = 0;
     _locked = false;
     _constructoridx = -1;
+    _destructoridx = -1;
     if(_base) {
         _constructoridx = _base->_constructoridx;
+        _destructoridx = _base->_destructoridx;
         _udsize = _base->_udsize;
         _defaultvalues.copy(base->_defaultvalues);
         _methods.copy(base->_methods);
@@ -83,6 +85,13 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
                 if(isconstructor) {
                     _constructoridx = (SQInteger)_methods.size();
                 }
+
+                bool isdestructor;
+                SQVM::IsEqual(ss->_destructoridx, key, isdestructor);
+                if(isdestructor) {
+                    _destructoridx = (SQInteger)_methods.size();
+                }
+
                 SQClassMember m;
                 m.val = theval;
                 _members->NewSlot(key,SQObjectPtr(_make_method_idx(_methods.size())));
@@ -161,6 +170,7 @@ SQInstance::SQInstance(SQSharedState *ss, SQClass *c, SQInteger memsize)
 {
     _memsize = memsize;
     _class = c;
+    _finalizing = false;
     SQUnsignedInteger nvalues = _class->_defaultvalues.size();
     for(SQUnsignedInteger n = 0; n < nvalues; n++) {
         new (&_values[n]) SQObjectPtr(_class->_defaultvalues[n].val);
@@ -172,6 +182,7 @@ SQInstance::SQInstance(SQSharedState *ss, SQInstance *i, SQInteger memsize)
 {
     _memsize = memsize;
     _class = i->_class;
+    _finalizing = false;
     SQUnsignedInteger nvalues = _class->_defaultvalues.size();
     for(SQUnsignedInteger n = 0; n < nvalues; n++) {
         new (&_values[n]) SQObjectPtr(i->_values[n]);
