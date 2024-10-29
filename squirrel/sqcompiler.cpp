@@ -729,6 +729,7 @@ public:
             break;
         case TK_IDENTIFIER:
         case TK_CONSTRUCTOR:
+        case TK_DESTRUCTOR:
         case TK_THIS:{
                 SQObject id;
                 SQObject constant;
@@ -737,6 +738,7 @@ public:
                     case TK_IDENTIFIER:  id = _fs->CreateString(_lex._svalue);       break;
                     case TK_THIS:        id = _fs->CreateString(_SC("this"),4);        break;
                     case TK_CONSTRUCTOR: id = _fs->CreateString(_SC("constructor"),11); break;
+                    case TK_DESTRUCTOR: id = _fs->CreateString(_SC("destructor"),10); break;
                 }
 
                 SQInteger pos = -1;
@@ -989,6 +991,21 @@ public:
                 SQInteger tk = _token;
                 Lex();
                 SQObject id = tk == TK_FUNCTION ? Expect(TK_IDENTIFIER) : _fs->CreateString(_SC("constructor"));
+				_fs->AddInstruction(_OP_LOAD, _fs->PushTarget(), _fs->GetConstant(id));
+				SQInteger boundtarget = 0xFF;
+				if (_token == _SC('[')) {
+					boundtarget = ParseBindEnv();
+				}
+                Expect(_SC('('));
+                
+                CreateFunction(id, boundtarget);
+                _fs->AddInstruction(_OP_CLOSURE, _fs->PushTarget(), _fs->_functions.size() - 1, boundtarget);
+                                }
+                                break;
+            case TK_DESTRUCTOR:{
+                SQInteger tk = _token;
+                Lex();
+                SQObject id = tk == TK_FUNCTION ? Expect(TK_IDENTIFIER) : _fs->CreateString(_SC("destructor"));
 				_fs->AddInstruction(_OP_LOAD, _fs->PushTarget(), _fs->GetConstant(id));
 				SQInteger boundtarget = 0xFF;
 				if (_token == _SC('[')) {

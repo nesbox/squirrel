@@ -58,6 +58,14 @@ public:
         }
         return false;
     }
+    bool GetDestructor(SQObjectPtr &dtor)
+    {
+        if(_destructoridx != -1) {
+            dtor = _methods[_destructoridx].val;
+            return true;
+        }
+        return false;
+    }
     bool SetAttributes(const SQObjectPtr &key,const SQObjectPtr &val);
     bool GetAttributes(const SQObjectPtr &key,SQObjectPtr &outval);
     void Lock() { _locked = true; if(_base) _base->Lock(); }
@@ -82,6 +90,7 @@ public:
     SQRELEASEHOOK _hook;
     bool _locked;
     SQInteger _constructoridx;
+    SQInteger _destructoridx;
     SQInteger _udsize;
 };
 
@@ -137,10 +146,20 @@ public:
         return false;
     }
     void Release() {
+        if (_finalizing) return;
+
         _uiRef++;
         if (_hook) { _hook(_userpointer,0);}
         _uiRef--;
+
+        SQVM* vm = (SQVM*)_sharedstate->_root_vm._unVal.pUserPointer;
+
+        _finalizing = true;
+        vm->FinalizeInstance(_class, this);
+        _finalizing = false;
+
         if(_uiRef > 0) return;
+
         SQInteger size = _memsize;
         this->~SQInstance();
         SQ_FREE(this, size);
@@ -158,6 +177,7 @@ public:
     SQRELEASEHOOK _hook;
     SQInteger _memsize;
     SQObjectPtr _values[1];
+    SQBool _finalizing;
 };
 
 #endif //_SQCLASS_H_
