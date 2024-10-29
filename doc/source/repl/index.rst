@@ -79,6 +79,7 @@
             [/\bwhile\b/, 'keyword'],
             [/\byield\b/, 'keyword'],
             [/\bconstructor\b/, 'keyword'],
+            [/\bdestructor\b/, 'keyword'],
             [/\binstanceof\b/, 'keyword'],
             [/\btrue\b/, 'keyword'],
             [/\bfalse\b/, 'keyword'],
