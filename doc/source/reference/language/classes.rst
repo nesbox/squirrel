@@ -427,3 +427,47 @@ the following example show how to create a class that implements the metamethod 
 Since version 2.1, classes support 2 metamethods ``_inherited`` and ``_newmember``.
 ``_inherited`` is invoked when a class inherits from the one that implements ``_inherited``.
 ``_newmember`` is invoked for each member that is added to the class(at declaration time).
+
+----------------------
+Destructor
+----------------------
+
+.. index::
+    pair: destructor; Class
+    single: Class destructor
+
+Class destructors can be used to add additional code cleanup code for object
+that will be executed when object is being garbage collected.
+If certain class has a parent (was extended via inehritance), the base destructor(s)
+will also get invoked in this order: ExtendedClass, BaseClass.
+
+the following example show how to create a class that implements the destructor::
+
+    class Building
+    {
+        constructor()
+        {
+            print("Building constructed!")
+        }
+        
+        destructor()
+        {
+            print("Building destroyed!")
+        }
+    }
+
+    class Hospital extends Building
+    {
+        constructor()
+        {
+            base.constructor()
+            print("Hospital constructed!")
+        }
+
+        destructor()
+        {
+            print("Hospital destroyed!")
+        }
+    }
+
+    local hospital = Hospital()
