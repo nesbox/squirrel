@@ -14,6 +14,7 @@ build:wasm:
   image: emscripten/emsdk:latest
   when: manual
   script:
+    - apt-get update
     - apt-get install -y ninja-build
     - cmake . --preset WebAssembly-Release
     - cmake --build --preset WebAssembly-Release
