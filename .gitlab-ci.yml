@@ -28,7 +28,6 @@ build:docs:
   stage: build
   needs: [build:wasm]
   image: python:3.9-alpine
-  when: manual
   script:
     - cd doc
     - pip install -r source/requirements.txt
