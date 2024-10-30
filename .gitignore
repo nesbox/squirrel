@@ -13,3 +13,6 @@ desktop.ini
 # Main directory
 
 /out/
+
+/doc/source/_static/sq_wasm.js
+/doc/source/_static/sq_wasm.wasm

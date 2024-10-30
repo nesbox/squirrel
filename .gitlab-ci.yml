@@ -14,12 +14,14 @@ build:wasm:
   image: emscripten/emsdk:latest
   when: manual
   script:
+    - apt-get install -y ninja-build
     - cmake . --preset WebAssembly-Release
     - cmake --build --preset WebAssembly-Release
   artifacts:
     name: "sq_docs"
     paths:
-      - doc/source/_static/
+      - doc/source/_static/sq_wasm.js
+      - doc/source/_static/sq_wasm.wasm
 
 build:docs:
   stage: build
