@@ -9,8 +9,21 @@ stages:
 - build
 - release
 
+build:wasm:
+  stage: build
+  image: emscripten/emsdk:latest
+  when: manual
+  script:
+    - cmake . --preset WebAssembly-Release
+    - cmake --build --preset WebAssembly-Release
+  artifacts:
+    name: "sq_docs"
+    paths:
+      - doc/source/_static/
+
 build:docs:
   stage: build
+  needs: [build:wasm]
   image: python:3.9-alpine
   when: manual
   script:
