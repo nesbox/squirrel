@@ -681,6 +681,10 @@ Thread
 
 starts the thread with the specified parameters
 
+.. js:function:: thread.acall(array_args)
+
+starts the thread with the specified parameters. The function accepts an array containing the parameters that will be passed to the called function.
+
 
 .. js:function:: thread.wakeup([wakeupval])
 

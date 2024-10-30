@@ -1215,6 +1215,27 @@ static SQInteger thread_call(HSQUIRRELVM v)
     return sq_throwerror(v,_SC("wrong parameter"));
 }
 
+static SQInteger thread_acall(HSQUIRRELVM v)
+{
+    SQObjectPtr o = stack_get(v,1);
+    if(sq_type(o) == OT_THREAD) {
+        SQArray *aparams=_array(stack_get(v,2));
+        SQInteger nparams = aparams->Size();
+
+        _thread(o)->Push(_thread(o)->_roottable);
+        for(SQInteger i=0;i<nparams;i++)
+            _thread(o)->Push(aparams->_values[i]);
+        if(SQ_SUCCEEDED(sq_call(_thread(o),nparams+1,SQTrue,SQTrue))) {
+            sq_move(v,_thread(o),-1);
+            sq_pop(_thread(o),1);
+            return 1;
+        }
+        v->_lasterror = _thread(o)->_lasterror;
+        return SQ_ERROR;
+    }
+    return sq_throwerror(v,_SC("wrong parameter"));
+}
+
 static SQInteger thread_wakeup(HSQUIRRELVM v)
 {
     SQObjectPtr o = stack_get(v,1);
@@ -1346,6 +1367,7 @@ static SQInteger thread_getstackinfos(HSQUIRRELVM v)
 
 const SQRegFunction SQSharedState::_thread_default_delegate_funcz[] = {
     {_SC("call"), thread_call, -1, _SC("v")},
+    {_SC("acall"), thread_acall, 2, _SC("va")},
     {_SC("wakeup"), thread_wakeup, -1, _SC("v")},
     {_SC("wakeupthrow"), thread_wakeupthrow, -2, _SC("v.b")},
     {_SC("getstatus"), thread_getstatus, 1, _SC("v")},

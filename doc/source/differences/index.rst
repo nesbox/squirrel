@@ -37,6 +37,7 @@ New functionallity
 - **blob.read** method
 - **blob.write** method
 - **blob.tostring** method
+- **thread.acall** method
 - **regexp.captureall** method
 
 ==================
