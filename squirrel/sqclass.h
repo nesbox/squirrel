@@ -146,17 +146,12 @@ public:
         return false;
     }
     void Release() {
-        if (_finalizing) return;
-
-        _uiRef++;
-        if (_hook) { _hook(_userpointer,0);}
-        _uiRef--;
-
         SQVM* vm = (SQVM*)_sharedstate->_root_vm._unVal.pUserPointer;
 
-        _finalizing = true;
+        _uiRef++;
         vm->FinalizeInstance(_class, this);
-        _finalizing = false;
+        if (_hook) { _hook(_userpointer, 0); }
+        _uiRef--;
 
         if(_uiRef > 0) return;
 
@@ -177,7 +172,6 @@ public:
     SQRELEASEHOOK _hook;
     SQInteger _memsize;
     SQObjectPtr _values[1];
-    SQBool _finalizing;
 };
 
 #endif //_SQCLASS_H_

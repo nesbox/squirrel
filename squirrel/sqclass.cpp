@@ -170,7 +170,6 @@ SQInstance::SQInstance(SQSharedState *ss, SQClass *c, SQInteger memsize)
 {
     _memsize = memsize;
     _class = c;
-    _finalizing = false;
     SQUnsignedInteger nvalues = _class->_defaultvalues.size();
     for(SQUnsignedInteger n = 0; n < nvalues; n++) {
         new (&_values[n]) SQObjectPtr(_class->_defaultvalues[n].val);
@@ -182,7 +181,6 @@ SQInstance::SQInstance(SQSharedState *ss, SQInstance *i, SQInteger memsize)
 {
     _memsize = memsize;
     _class = i->_class;
-    _finalizing = false;
     SQUnsignedInteger nvalues = _class->_defaultvalues.size();
     for(SQUnsignedInteger n = 0; n < nvalues; n++) {
         new (&_values[n]) SQObjectPtr(i->_values[n]);
