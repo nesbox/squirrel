@@ -1134,23 +1134,6 @@ bool SQVM::CreateClassInstance(SQClass *theclass, SQObjectPtr &inst, SQObjectPtr
     return true;
 }
 
-void SQVM::FinalizeInstance(SQClass* theclass, SQInstance* inst)
-{
-    SQObjectPtr dtor;
-    SQClass* c = theclass;
-
-    while (c && c->GetDestructor(dtor))
-    {
-        SQObjectPtr ret;
-
-        Push(inst);
-        Call(dtor, 1, _top - 1, ret, SQTrue);
-        Pop(1);
-
-        c = c->_base;
-    }
-}
-
 void SQVM::CallErrorHandler(SQObjectPtr &error)
 {
     if(sq_type(_errorhandler) != OT_NULL) {
@@ -1160,7 +1143,6 @@ void SQVM::CallErrorHandler(SQObjectPtr &error)
         Pop(2);
     }
 }
-
 
 void SQVM::CallDebugHook(SQInteger type,SQInteger forcedline)
 {

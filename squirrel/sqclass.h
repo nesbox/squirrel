@@ -146,15 +146,10 @@ public:
         return false;
     }
     void Release() {
-        SQVM* vm = (SQVM*)_sharedstate->_root_vm._unVal.pUserPointer;
-
         _uiRef++;
-        vm->FinalizeInstance(_class, this);
         if (_hook) { _hook(_userpointer, 0); }
         _uiRef--;
-
         if(_uiRef > 0) return;
-
         SQInteger size = _memsize;
         this->~SQInstance();
         SQ_FREE(this, size);

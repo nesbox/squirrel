@@ -86,12 +86,6 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
                     _constructoridx = (SQInteger)_methods.size();
                 }
 
-                bool isdestructor;
-                SQVM::IsEqual(ss->_destructoridx, key, isdestructor);
-                if(isdestructor) {
-                    _destructoridx = (SQInteger)_methods.size();
-                }
-
                 SQClassMember m;
                 m.val = theval;
                 _members->NewSlot(key,SQObjectPtr(_make_method_idx(_methods.size())));

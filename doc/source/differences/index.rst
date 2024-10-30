@@ -16,7 +16,6 @@ New features
 ==================
 
 - **local class** expression is now supported
-- Classes **destructor** support
 
 ==================
 New functionallity
