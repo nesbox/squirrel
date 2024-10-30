@@ -4,7 +4,7 @@
   Squirrel Standard Library 3.2
 #################################
 
-Copyright (c) 2003-2022 Alberto Demichelis
+Copyright (c) 2024 Gothic 2 Online Team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -11,6 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 1
 
+   differences/index.rst
    reference/index.rst
    stdlib/index.rst
    repl/index.rst
