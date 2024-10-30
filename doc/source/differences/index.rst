@@ -43,5 +43,5 @@ New functionallity
 Changes
 ==================
 
-- **regexp** modern engine support via C++ STL regex library used the hood
+- **regexp** modern engine support via C++ STL regex library used under the hood
 - **regexp** capture methods support optional groups by returning **null** in array results
