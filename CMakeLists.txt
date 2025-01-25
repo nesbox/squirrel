@@ -7,8 +7,8 @@ project(squirrel
 
 option(SQ_GENERATE_SQUIRREL "This option generates squirrel project. By default this option is set to ON" ON)
 option(SQ_GENERATE_STDLIB "This option generates squirrel stdlib project. By default this option is set to ON" ON)
-option(SQ_GENERATE_INTERPRETER "This option generates squirrel interpreter project. By default this option is set to ON" ON)
 option(SQ_GENERATE_COMPILER "This option generates squirrel script compiler. By default this option is set to ON" ON)
+option(SQ_GENERATE_INTERPRETER "This option generates squirrel interpreter project. By default this option is set to ON" ON)
 option(SQ_GENERATE_WASM_INTERPRETER "This option generates squirrel WebAssembly interpreter project. By default this option is set to ON" ON)
 option(SQ_GENERATE_ETC "This option generates squirrel embedding example project. By default this option is set to OFF" OFF)
 
@@ -22,12 +22,12 @@ if (SQ_GENERATE_STDLIB)
 	add_subdirectory(sqstdlib)
 endif()
 
-if (SQ_GENERATE_INTERPRETER)
-	add_subdirectory(sq)
+if (SQ_GENERATE_COMPILER)
+	add_subdirectory(sq_compiler)
 endif()
 
-if (SQ_GENERATE_COMPILER)
-	add_subdirectory(sq-compiler)
+if (SQ_GENERATE_INTERPRETER)
+	add_subdirectory(sq)
 endif()
 
 if (SQ_GENERATE_WASM_INTERPRETER)
