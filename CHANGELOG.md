@@ -1,3 +1,3 @@
 ## Changelog
 
-- Added `try squirrel online` interpreter docs subsite
+- `_get` metamethod will also affect `in` operator
