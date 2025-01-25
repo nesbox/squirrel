@@ -16,9 +16,10 @@ New features
 ==================
 
 - **local class** expression is now supported
+- **_get** metamethod will also affect **in** operator
 
 ==================
-New functionallity
+New functionality
 ==================
 
 - **geterrorhandler** function
