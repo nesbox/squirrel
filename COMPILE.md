@@ -9,7 +9,13 @@ What is in this distribution?
     the standard utility libraries
 
 - **sq**  
-    stand alone interpreter
+    standalone interpreter
+
+- **sq_wasm**  
+    interpreter made for WebAssembly
+
+- **sq-compiler**
+    squirrel scripts bytecode compiler
 
 - **doc**  
     The manual
