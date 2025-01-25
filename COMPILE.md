@@ -14,7 +14,7 @@ What is in this distribution?
 - **sq_wasm**  
     interpreter made for WebAssembly
 
-- **sq-compiler**
+- **sq__compiler**
     squirrel scripts bytecode compiler
 
 - **doc**  
