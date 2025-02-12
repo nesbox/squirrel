@@ -29,6 +29,7 @@ New functionality
 - **min** function
 - **max** function
 - **clamp** function
+- **lerp** function
 - **round** function
 - **random** function
 - **randomseed** function
