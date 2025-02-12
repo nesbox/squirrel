@@ -244,6 +244,21 @@ static SQInteger math_abs(HSQUIRRELVM v)
     return 1;
 }
 
+static SQRESULT math_lerp(HSQUIRRELVM vm)
+{
+	SQFloat a;
+	sq_getfloat(vm, 2, &a);
+	
+	SQFloat b;
+	sq_getfloat(vm, 3, &b);
+	
+	SQFloat t;
+	sq_getfloat(vm, 4, &t);
+
+	sq_pushfloat(vm, a + (b - a) * t);
+	return 1;
+}
+
 SINGLE_ARG_FUNC(sqrt)
 SINGLE_ARG_FUNC(fabs)
 SINGLE_ARG_FUNC(sin)
@@ -265,6 +280,7 @@ static const SQRegFunction mathlib_funcs[] = {
 	_DECL_FUNC(min,-2,_SC(".n")),
 	_DECL_FUNC(max,-2,_SC(".n")),
 	_DECL_FUNC(clamp, 4,_SC(".nnn")),
+	_DECL_FUNC(lerp, 4,_SC(".nnn")),
 	_DECL_FUNC(random, -1,_SC(".nn")),
 	_DECL_FUNC(randomseed, 2,_SC(".n")),
 	_DECL_FUNC(round, -2,_SC(".fi")),

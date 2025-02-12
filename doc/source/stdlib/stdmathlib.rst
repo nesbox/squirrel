@@ -80,6 +80,10 @@ Global Symbols
 
     returns a float value representing the largest integer that is less than or equal to `x`
 
+.. js:function:: lerp(x, y, t)
+
+    returns the interpolated float result between the two float values
+
 .. js:function:: log(x)
 
     returns the natural logarithm of `x`
