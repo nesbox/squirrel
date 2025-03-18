@@ -9,6 +9,68 @@ stages:
 - build
 - release
 
+.build:
+  stage: build
+  when: manual
+  script:
+    - cmake . --preset ${SYSTEM}-${ARCHITECTURE}-Release
+    - cmake --build --preset ${SYSTEM}-${ARCHITECTURE}-Release
+    - mv sq/ sq_code/
+    - mv sq_compiler/ sq_compiler_code/
+    - cp out/build/${SYSTEM}-${ARCHITECTURE}-Release/sq/sq${EXECUTABLE_SUFFIX} ./
+    - cp out/build/${SYSTEM}-${ARCHITECTURE}-Release/sq_compiler/sq_compiler${EXECUTABLE_SUFFIX} ./
+  artifacts:
+    name: ${SYSTEM}-${ARCHITECTURE}
+    paths:
+      - sq${EXECUTABLE_SUFFIX}
+      - sq_compiler${EXECUTABLE_SUFFIX}
+    expire_in: never
+    reports:
+        dotenv: job.env
+
+
+build:windows:
+  extends: .build
+  tags: [saas-windows-medium-amd64]
+  variables:
+    SYSTEM: "Windows"
+    EXECUTABLE_SUFFIX: ".exe"
+  before_script: |
+    function loadenv($bat_file)
+    {
+      $env_file = New-TemporaryFile
+      cmd /c " `"$bat_file`" $args && set > `"$env_file`" "
+
+      foreach($line in Get-Content "$env_file") 
+      {
+        if($line -match "^(.*?)=(.*)$")
+        {
+          Set-Content "env:\$($matches[1])" $matches[2]
+        }
+      }
+
+      Remove-Item "$env_file"
+    }
+
+    loadenv "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" ${ARCHITECTURE}
+  after_script:
+    - Add-Content -Path job.env -Value "${SYSTEM}_${ARCHITECTURE}_job_id=${CI_JOB_ID}"
+  parallel:
+    matrix:
+      - ARCHITECTURE: [x86, x64]
+
+build:linux:
+  extends: .build
+  image: registry.gitlab.com/gothicmultiplayerteam/buildimage:ubuntu-20.04-${ARCHITECTURE}
+  variables:
+    SYSTEM: "Linux"
+    EXECUTABLE_SUFFIX: ""
+  after_script:
+    - echo "${SYSTEM}_${ARCHITECTURE}_job_id=${CI_JOB_ID}" >> job.env
+  parallel:
+    matrix:
+      - ARCHITECTURE: [x64, arm, arm64]
+
 build:wasm:
   stage: build
   image: emscripten/emsdk:latest
@@ -65,7 +127,7 @@ release:
   stage: release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   when: manual
-  needs: [pages, docs]
+  needs: [pages, docs, build:windows, build:linux]
   script:
     - echo "Created ${VERSION} release"
   release:
@@ -75,3 +137,18 @@ release:
       links:
         - name: "sq_docs"
           url: "${CI_PROJECT_URL}/-/jobs/${Docs_job_id}/artifacts/download"
+        - name: "Windows-x86"
+          url: "${CI_PROJECT_URL}/-/jobs/${Windows_x86_job_id}/artifacts/download"
+          link_type: "package"
+        - name: "Windows-x64"
+          url: "${CI_PROJECT_URL}/-/jobs/${Windows_x64_job_id}/artifacts/download"
+          link_type: "package"
+        - name: "Linux-x64"
+          url: "${CI_PROJECT_URL}/-/jobs/${Linux_x64_job_id}/artifacts/download"
+          link_type: "package"
+        - name: "Linux-arm"
+          url: "${CI_PROJECT_URL}/-/jobs/${Linux_arm_job_id}/artifacts/download"
+          link_type: "package"
+        - name: "Linux-arm64"
+          url: "${CI_PROJECT_URL}/-/jobs/${Linux_arm64_job_id}/artifacts/download"
+          link_type: "package"
