@@ -191,20 +191,41 @@ static bool _read_line(HSQUIRRELVM v, FILE* f, bool chop)
 
 static void _read_all(HSQUIRRELVM v, FILE* f)
 {
-    size_t size = 0;
-    size_t chunkSize = 0;
+    size_t stringSize = 0;
 
-    SQChar* buffer = (SQChar*)sq_malloc(size);
+    size_t bufferSize = FILEBUFFERSIZE;
+    SQChar* buffer = (SQChar*)sq_malloc(bufferSize);
 
-    do {  /* read file in chunks of FILEBUFFERSIZE bytes */
-        chunkSize = fread(&buffer[size], sizeof(SQChar), FILEBUFFERSIZE, f);
-        buffer = (SQChar*)sq_realloc(buffer, size, size + FILEBUFFERSIZE);
+    if (!buffer) {
+        sq_pushnull(v);
+        return;
+    }
 
-        size += chunkSize;
-    } while (chunkSize == FILEBUFFERSIZE);
+    size_t chunkSize;
+    while ((chunkSize = fread(&buffer[stringSize], sizeof(SQChar), FILEBUFFERSIZE, f)) > 0)
+    {
+        stringSize += chunkSize;
 
-    sq_pushstring(v, &buffer[0], size);
-    sq_free(buffer, size);
+        // Ensure enough space for next read
+        if (stringSize + FILEBUFFERSIZE > bufferSize)
+        {
+            size_t newBufferSize = bufferSize * 2; // Exponential growth
+            SQChar* newBuffer = (SQChar*)sq_realloc(buffer, bufferSize, newBufferSize);
+
+            if (!newBuffer) {
+                sq_free(buffer, bufferSize);
+
+                sq_pushnull(v);
+                return;
+            }
+
+            buffer = newBuffer;
+            bufferSize = newBufferSize;
+        }
+    }
+
+    sq_pushstring(v, buffer, stringSize);
+    sq_free(buffer, bufferSize);
 }
 
 static bool _read_chars(HSQUIRRELVM v, FILE* f, size_t n)
