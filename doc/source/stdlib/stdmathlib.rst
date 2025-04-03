@@ -23,6 +23,12 @@ Global Symbols
 
     returns the largest item from passed arguments
 
+.. js:function:: sign(x)
+
+    returns the -1, 0 or 1 depending on given `x` value.
+    passing non numerical argument will result in returning null.
+    passing `NaN` will result the same value back.
+
 .. js:function:: clamp(x, min, max)
 
     returns the clamped x value between min and max range
@@ -34,7 +40,7 @@ Global Symbols
 .. js:function:: random(min=null, max=null)
 
     returns a pseudorandom integer in the range min, max.
-    If you don't pass `min`, `max` arguments, pseudorandom float in range <0.0, 1.0) is returned instead.
+    if you don't pass `min`, `max` arguments, pseudorandom float in range <0.0, 1.0) is returned instead.
 
 .. js:function:: randomseed(seed)
 

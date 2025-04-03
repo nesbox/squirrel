@@ -99,6 +99,51 @@ static SQRESULT math_max(HSQUIRRELVM vm)
 	}
 }
 
+static SQRESULT math_sign(HSQUIRRELVM vm)
+{
+	switch (sq_gettype(vm, 2))
+	{
+		case OT_INTEGER:
+		{
+			SQInteger x;
+			sq_getinteger(vm, 2, &x);
+
+			if (x < 0)
+				sq_pushinteger(vm, -1);
+			else if (x > 0)
+				sq_pushinteger(vm, 1);
+			else
+				sq_pushinteger(vm, 0);
+
+			break;
+		}
+
+		case OT_FLOAT:
+		{
+			SQFloat x;
+			sq_getfloat(vm, 2, &x);
+
+			if (std::isnan(x))
+				sq_pushfloat(vm, x);
+			else if (std::signbit(x))
+				sq_pushinteger(vm, -1);
+			else
+				sq_pushinteger(vm, 1);
+
+			break;
+		}
+
+		default:
+		{
+			sq_pushnull(vm);
+			break;
+		}
+			
+	}
+
+	return 1;
+}
+
 static SQRESULT math_clamp(HSQUIRRELVM vm)
 {
 	switch (sq_gettype(vm, 2))
@@ -279,6 +324,7 @@ SINGLE_ARG_FUNC(exp)
 static const SQRegFunction mathlib_funcs[] = {
 	_DECL_FUNC(min,-2,_SC(".n")),
 	_DECL_FUNC(max,-2,_SC(".n")),
+	_DECL_FUNC(sign, 2,_SC(".n")),
 	_DECL_FUNC(clamp, 4,_SC(".nnn")),
 	_DECL_FUNC(lerp, 4,_SC(".nnn")),
 	_DECL_FUNC(random, -1,_SC(".nn")),
