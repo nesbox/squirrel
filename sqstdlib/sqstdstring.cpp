@@ -479,13 +479,15 @@ static SQInteger _regexp_captureall(HSQUIRRELVM v)
     const SQChar* str;
     sq_getstring(v, 2, &str);
 
+    SQInteger len = (SQInteger)scstrlen(str);
+
     SQInteger start = 0;
     if (sq_gettop(v) > 2) sq_getinteger(v, 3, &start);
 
     SQBool array_created = false;
 
-    const SQChar* begin, * end;
-    while (sqstd_rex_search(self, str + start, &begin, &end) == SQTrue) {
+    const SQChar* begin, *end;
+    while (str + start != str + len && sqstd_rex_search(self, str + start, &begin, &end) == SQTrue) {
         if (!array_created) {
             sq_newarray(v, 0);
             array_created = true;
@@ -497,7 +499,7 @@ static SQInteger _regexp_captureall(HSQUIRRELVM v)
 
             if (match.len != -1) {
                 _addrexmatch(v, str, match.begin, match.begin + match.len);
-                start = match.begin - str + match.len + 1;
+                start = match.begin - str + match.len;
             }
             else
                 sq_pushnull(v);

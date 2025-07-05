@@ -47,14 +47,11 @@ SQBool sqstd_rex_match(SQRex* exp,const SQChar* text)
 
 SQBool sqstd_rex_searchrange(SQRex* exp,const SQChar* text_begin,const SQChar* text_end,const SQChar** out_begin, const SQChar** out_end)
 {
-    std::cmatch matches;
-    if (!std::regex_search(text_begin, text_end, matches, exp->regex))
+    if (!std::regex_search(text_begin, text_end, exp->matches, exp->regex))
         return SQFalse;
 
-    exp->matches = matches;
-
-    if (out_begin) *out_begin = matches[0].first;
-    if (out_end) *out_end = matches[0].second;
+    if (out_begin) *out_begin = exp->matches[0].first;
+    if (out_end) *out_end = exp->matches[0].second;
 
     return SQTrue;
 }
