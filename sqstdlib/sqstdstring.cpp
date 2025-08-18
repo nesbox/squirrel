@@ -499,6 +499,8 @@ static SQInteger _regexp_captureall(HSQUIRRELVM v)
 
             if (match.len != -1) {
                 _addrexmatch(v, str, match.begin, match.begin + match.len);
+
+            if (i == 0)
                 start = match.begin - str + (match.len <= 0 ? 1 : match.len);
             }
             else
