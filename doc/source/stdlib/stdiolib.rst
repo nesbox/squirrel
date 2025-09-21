@@ -43,7 +43,7 @@ Global Symbols
 
 .. js:function:: readline(stream=stdin)
 
-    reads a line from given stream without including `\n` at the end, can be used to read console input.
+    reads a line from given stream without including '\n' at the end, can be used to read console input.
 
 .. js:data:: stderr
 

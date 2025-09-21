@@ -122,6 +122,10 @@ Runs the garbage collector and returns an array containing all unreachable objec
 
 return the 'raw' type of an object without invoking the metamethod '_typeof'.
 
+.. js:function:: tostring(obj)
+
+return the string representation of an object without invoking the metamethod '_tostring'.
+
 .. js:function:: getstackinfos(level)
 
 returns the stack informations of a given call stack level. returns a table formatted as follow: ::

@@ -281,7 +281,7 @@ bool SQVM::CMP_OP(CmpOP op, const SQObjectPtr &o1,const SQObjectPtr &o2,SQObject
     return false;
 }
 
-bool SQVM::ToString(const SQObjectPtr &o,SQObjectPtr &res)
+bool SQVM::ToString(const SQObjectPtr &o,SQObjectPtr &res,bool invokemetamethod)
 {
     switch(sq_type(o)) {
     case OT_STRING:
@@ -302,7 +302,7 @@ bool SQVM::ToString(const SQObjectPtr &o,SQObjectPtr &res)
     case OT_TABLE:
     case OT_USERDATA:
     case OT_INSTANCE:
-        if(_delegable(o)->_delegate) {
+        if(_delegable(o)->_delegate && invokemetamethod) {
             SQObjectPtr closure;
             if(_delegable(o)->GetMetaMethod(this, MT_TOSTRING, closure)) {
                 Push(o);
