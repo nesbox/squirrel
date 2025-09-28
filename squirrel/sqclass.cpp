@@ -204,6 +204,24 @@ bool SQInstance::GetMetaMethod(SQVM* SQ_UNUSED_ARG(v),SQMetaMethod mm,SQObjectPt
     return false;
 }
 
+SQInteger SQInstance::Next(const SQObjectPtr& refpos, SQObjectPtr& outkey, SQObjectPtr& outval)
+{
+    SQObjectPtr oval;
+    SQObjectPtr newpos = refpos;
+    SQInteger idx;
+
+    do
+    {
+        idx = _class->_members->Next(false, newpos, outkey, oval);
+        ++newpos._unVal.nInteger;
+    } while (idx != -1 && !_isfield(oval));
+
+    if (idx != -1)
+        outval = _realval(_values[_member_idx(oval)]);
+
+    return idx;
+}
+
 bool SQInstance::InstanceOf(SQClass *trg)
 {
     SQClass *parent = _class;

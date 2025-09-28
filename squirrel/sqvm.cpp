@@ -558,6 +558,11 @@ bool SQVM::FOREACH_OP(SQObjectPtr &o1,SQObjectPtr &o2,SQObjectPtr
                     return false;
                 }
             }
+            if (sq_type(o1) == OT_INSTANCE)
+            {
+                if ((nrefidx = _instance(o1)->Next(o4, o2, o3)) == -1)_FINISH(exitpos);
+                o4 = (SQInteger)nrefidx; _FINISH(1);
+            }
             Raise_Error(_SC("_nexti failed"));
             return false;
         }
