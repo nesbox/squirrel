@@ -1,4 +1,5 @@
 ## Changelog
 
-- Fixed Infinite loop while using regexp.captureall
-- Fixed regexp.captureall moving start while processing subgroup
+- Added function `tostring`
+- Added function `dump`
+- Class instances now support `foreach`
