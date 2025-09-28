@@ -158,6 +158,7 @@ public:
 #ifndef NO_GARBAGE_COLLECTOR
     void Mark(SQCollectable ** );
     SQObjectType GetType() {return OT_INSTANCE;}
+    SQInteger Next(const SQObjectPtr& refpos, SQObjectPtr& outkey, SQObjectPtr& outval);
 #endif
     bool InstanceOf(SQClass *trg);
     bool GetMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res);
