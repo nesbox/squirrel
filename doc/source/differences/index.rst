@@ -27,6 +27,7 @@ New functionality
 - **getstacktop** function (used for debugging only)
 - **getstacksize** function (used for debugging only)
 - **tostring** function
+- **dump** function
 - **min** function
 - **max** function
 - **clamp** function

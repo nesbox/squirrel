@@ -126,6 +126,10 @@ return the 'raw' type of an object without invoking the metamethod '_typeof'.
 
 return the string representation of an object without invoking the metamethod '_tostring'.
 
+.. js:function:: dump(obj)
+
+return the pretty string representation of an object, including all its fields and their values. Invokes the metamethod '_tostring' if present.
+
 .. js:function:: getstackinfos(level)
 
 returns the stack informations of a given call stack level. returns a table formatted as follow: ::

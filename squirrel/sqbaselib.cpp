@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <string>
 
 static bool str2num(const SQChar *s,SQObjectPtr &res,SQInteger base)
 {
@@ -41,9 +42,97 @@ static bool str2num(const SQChar *s,SQObjectPtr &res,SQInteger base)
     return true;
 }
 
-static SQInteger base_dummy(HSQUIRRELVM SQ_UNUSED_ARG(v))
+static void dump_object(HSQUIRRELVM v, const HSQOBJECT& obj, std::string& out)
 {
-    return 0;
+    switch (obj._type)
+    {
+        case OT_STRING:
+            out += "\"" + std::string(_stringval(obj)) + "\"";
+            break;
+
+        case OT_ARRAY:
+        {
+            out += "[ ";
+
+            SQArray* array = _array(obj);
+            for (SQInteger i = 0, size = array->Size(); i < size; ++i)
+            {
+                if (i > 0) out += ", ";
+
+                SQObjectPtr val;
+                if (!array->Get(i, val))
+                    break;
+
+                dump_object(v, val, out);
+            }
+
+            out += " ]";
+            break;
+        }
+
+        case OT_TABLE:
+        case OT_CLASS:
+        case OT_INSTANCE:
+        {
+            if (SQObjectPtr closure; is_delegable(obj) && _delegable(obj)->GetMetaMethod(v, MT_TOSTRING, closure)) {
+                SQObjectPtr res;
+                v->ToString(obj, res);
+
+                out += _stringval(res);
+                return;
+            }
+
+            out += "{ ";
+
+            sq_pushobject(v, obj); // push container
+            sq_pushnull(v); // push initial iterator
+
+            bool first = true;
+            while (SQ_SUCCEEDED(sq_next(v, -2)))
+            {
+                if (!first) out += ", ";
+                first = false;
+
+                HSQOBJECT key;
+                sq_getstackobj(v, -2, &key);
+
+                dump_object(v, key, out);
+
+                out += ": ";
+
+                HSQOBJECT val;
+                sq_getstackobj(v, -1, &val);
+
+                dump_object(v, val, out);
+
+                sq_pop(v, 2); // pop key & val
+            }
+
+            sq_pop(v, 1); // pop container
+
+            out += " }";
+            break;
+        }
+
+    default:
+        if (SQObjectPtr res; v->ToString(obj, res))
+            out += _stringval(res);
+        else
+            out += "<unknown>";
+        break;
+    }
+}
+
+static SQInteger base_dump(HSQUIRRELVM v)
+{
+    HSQOBJECT obj;
+    sq_getstackobj(v, 2, &obj);
+
+    std::string result;
+    dump_object(v, obj, result);
+
+    sq_pushstring(v, result.c_str(), result.size());
+    return 1;
 }
 
 #ifndef NO_GARBAGE_COLLECTOR
@@ -361,7 +450,7 @@ static const SQRegFunction base_funcs[]={
     {_SC("type"),base_type,2, NULL},
     {_SC("tostring"),base_tostring,2, NULL},
     {_SC("callee"),base_callee,0,NULL},
-    {_SC("dummy"),base_dummy,0,NULL},
+    {_SC("dump"),base_dump,2,NULL},
 #ifndef NO_GARBAGE_COLLECTOR
     {_SC("collectgarbage"),base_collectgarbage,0, NULL},
     {_SC("resurrectunreachable"),base_resurectureachable,0, NULL},
