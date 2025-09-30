@@ -96,19 +96,17 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT& obj, std::string& out)
                 HSQOBJECT key;
                 sq_getstackobj(v, -2, &key);
 
-                dump_object(v, key, out);
-
-                out += ": ";
-
                 HSQOBJECT val;
                 sq_getstackobj(v, -1, &val);
 
-                dump_object(v, val, out);
-
                 sq_pop(v, 2); // pop key & val
+
+                dump_object(v, key, out);
+                out += ": ";
+                dump_object(v, val, out);
             }
 
-            sq_pop(v, 1); // pop container
+            sq_pop(v, 2); // pop iterator + container
 
             out += " }";
             break;

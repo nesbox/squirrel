@@ -210,14 +210,14 @@ SQInteger SQInstance::Next(const SQObjectPtr& refpos, SQObjectPtr& outkey, SQObj
     SQObjectPtr newpos = refpos;
     SQInteger idx;
 
-    do
-    {
-        idx = _class->_members->Next(false, newpos, outkey, oval);
-        ++newpos._unVal.nInteger;
-    } while (idx != -1 && !_isfield(oval));
+    while ((idx = _class->_members->Next(false, newpos, outkey, oval)) != -1) {
+        if (_isfield(oval)) {
+            outval = _realval(_values[_member_idx(oval)]);
+            return idx;
+        }
 
-    if (idx != -1)
-        outval = _realval(_values[_member_idx(oval)]);
+        newpos = idx + 1;
+    }
 
     return idx;
 }
