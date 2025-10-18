@@ -710,7 +710,7 @@ bool SQVM::Execute(SQObjectPtr &closure, SQInteger nargs, SQInteger stackbase,SQ
             temp_reg = closure;
             if(!StartCall(_closure(temp_reg), _top - nargs, nargs, stackbase, false)) {
                 //call the handler if there are no calls in the stack, if not relies on the previous node
-                if(ci == NULL) CallErrorHandler(_lasterror);
+                if(ci == NULL && raiseerror) CallErrorHandler(_lasterror);
                 return false;
             }
             if(ci == prevci) {
