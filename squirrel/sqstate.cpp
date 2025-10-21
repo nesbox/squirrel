@@ -463,7 +463,7 @@ SQBool RefTable::Release(SQObject &obj)
         }
     }
     else {
-        assert(0);
+        //assert(0);
     }
     return SQFalse;
 }
