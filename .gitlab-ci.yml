@@ -61,7 +61,7 @@ build:windows:
 
 build:linux:
   extends: .build
-  image: registry.gitlab.com/gothicmultiplayerteam/buildimage:ubuntu-20.04-${ARCHITECTURE}
+  image: registry.gitlab.com/gothicmultiplayerteam/buildimage:debian-bookworm-slim-${ARCHITECTURE}
   variables:
     SYSTEM: "Linux"
     EXECUTABLE_SUFFIX: ""
@@ -69,7 +69,7 @@ build:linux:
     - echo "${SYSTEM}_${ARCHITECTURE}_job_id=${CI_JOB_ID}" >> job.env
   parallel:
     matrix:
-      - ARCHITECTURE: [x64, arm, arm64]
+      - ARCHITECTURE: [x64, arm64]
 
 build:wasm:
   stage: build
