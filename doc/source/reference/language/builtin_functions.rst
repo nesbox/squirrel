@@ -122,7 +122,7 @@ Runs the garbage collector and returns an array containing all unreachable objec
 
 return the 'raw' type of an object without invoking the metamethod '_typeof'.
 
-.. js:function:: tostring(obj)
+.. js:function:: rawstring(obj)
 
 return the string representation of an object without invoking the metamethod '_tostring'.
 
