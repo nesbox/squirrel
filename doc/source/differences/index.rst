@@ -27,7 +27,7 @@ New functionality
 - **getdefaultdelegate** function
 - **getstacktop** function (used for debugging only)
 - **getstacksize** function (used for debugging only)
-- **tostring** function
+- **rawstring** function
 - **dump** function
 - **min** function
 - **max** function

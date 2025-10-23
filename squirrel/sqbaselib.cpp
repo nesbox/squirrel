@@ -405,7 +405,7 @@ static SQInteger base_type(HSQUIRRELVM v)
     return 1;
 }
 
-static SQInteger base_tostring(HSQUIRRELVM v)
+static SQInteger base_rawstring(HSQUIRRELVM v)
 {
     SQObjectPtr &o = stack_get(v,2);
     SQObjectPtr result;
@@ -446,7 +446,7 @@ static const SQRegFunction base_funcs[]={
     {_SC("suspend"),base_suspend,-1, NULL},
     {_SC("array"),base_array,-2, _SC(".n")},
     {_SC("type"),base_type,2, NULL},
-    {_SC("tostring"),base_tostring,2, NULL},
+    {_SC("rawstring"),base_rawstring,2, NULL},
     {_SC("callee"),base_callee,0,NULL},
     {_SC("dump"),base_dump,2,NULL},
 #ifndef NO_GARBAGE_COLLECTOR
