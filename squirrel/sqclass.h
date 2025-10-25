@@ -125,7 +125,7 @@ public:
     }
     ~SQInstance();
     bool Get(const SQObjectPtr &key,SQObjectPtr &val)  {
-        if(_class->_members->Get(key,val)) {
+        if(_class && _class->_members->Get(key,val)) {
             if(_isfield(val)) {
                 SQObjectPtr &o = _values[_member_idx(val)];
                 val = _realval(o);
@@ -139,7 +139,7 @@ public:
     }
     bool Set(const SQObjectPtr &key,const SQObjectPtr &val) {
         SQObjectPtr idx;
-        if(_class->_members->Get(key,idx) && _isfield(idx)) {
+        if(_class && _class->_members->Get(key,idx) && _isfield(idx)) {
             _values[_member_idx(idx)] = val;
             return true;
         }
