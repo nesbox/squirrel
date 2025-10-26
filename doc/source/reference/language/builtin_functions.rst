@@ -90,6 +90,27 @@ sets the const table of the VM; returns the previous const table.
     |  "thread"    |  default thread delegate                                                                |
     +--------------+-----------------------------------------------------------------------------------------+
 
+.. js:function:: getreleasehook(class_or_instance)
+
+| Retrieves the release callback associated with a given class or class instance.
+| If no release hook has been set, this function returns `null`.
+
+- class_or_instance: A class or instance to query for an existing release hook.
+
+Important Notes:
+
+- The returned value is either the function previously set via `setreleasehook`, or `null` if no hook is registered.
+- This function does not invoke the hook — it only returns the reference.
+- The returned function, if any, will be bound to the object when invoked during release.
+
+Example::
+
+    local hook = getreleasehook(myInstance);
+    if (hook != null)
+    {
+        print("Hook is set for this instance.");
+    }
+
 .. js:function:: setreleasehook(class_or_instance, callback_or_null)
 
 | Registers or removes a release callback for a given class or class instance.
@@ -102,7 +123,7 @@ Important Notes:
 
 - The callback will be invoked with the object being released bound to `this`. This allows you to access its state or perform cleanup logic.
 - You must not increase the reference count of the object inside the release hook. Doing so can prevent the object from being properly collected, leading to memory leaks or undefined behavior.
-- If a release hook is already set on the object, attempting to set another one will raise an error.
+- If a release hook is already set on the object via `sq_setreleasehook`, attempting to set another one will raise an error.
 
 Example::
 

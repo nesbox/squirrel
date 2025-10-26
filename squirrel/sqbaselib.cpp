@@ -179,6 +179,47 @@ static SQInteger release_hook(SQUserPointer ptr, SQInteger size)
 	return 0;
 }
 
+static SQInteger base_getreleasehook(HSQUIRRELVM vm)
+{
+    HSQOBJECT sq_class_or_instance;
+	sq_getstackobj(vm, 2, &sq_class_or_instance);
+
+    if (sq_class_or_instance._type != OT_INSTANCE && sq_class_or_instance._type != OT_CLASS)
+		return sqstd_throwerrorf(vm, "parameter %d has an invalid type '%s' ; expected: '%s'", 1, sq_gettype(vm, 2), "instance|class");
+
+    sq_pushregistrytable(vm);
+    sq_pushstring(vm, "__release_hooks", -1);
+
+    if (SQ_FAILED(sq_get(vm, -2)))
+    {
+        sq_pushstring(vm, "__release_hooks", -1);
+
+        sq_newtable(vm); // create "__release_hooks" table
+
+        HSQOBJECT table;
+        sq_getstackobj(vm, -1, &table);
+
+        sq_newslot(vm, -3, SQFalse);
+        sq_pushobject(vm, table);
+    }
+
+    sq_remove(vm, -2); // remove registry table
+
+    sq_pushinteger(vm, sq_class_or_instance._unVal.nInteger);
+
+    if (SQ_FAILED(sq_get(vm, -2)))
+    {
+        sq_poptop(vm);
+        sq_pushnull(vm);
+
+        return 1;
+    }
+
+    sq_remove(vm, -2); // remove "__release_hooks" table
+
+    return 1;
+}
+
 static SQInteger base_setreleasehook(HSQUIRRELVM vm)
 {
 	HSQOBJECT sq_class_or_instance;
@@ -582,6 +623,7 @@ static const SQRegFunction base_funcs[]={
     {_SC("rawstring"),base_rawstring,2, NULL},
     {_SC("callee"),base_callee,0,NULL},
     {_SC("dump"),base_dump,2,NULL},
+    {_SC("getreleasehook"),base_getreleasehook,2,NULL},
     {_SC("setreleasehook"),base_setreleasehook,3,NULL},
 #ifndef NO_GARBAGE_COLLECTOR
     {_SC("collectgarbage"),base_collectgarbage,0, NULL},
