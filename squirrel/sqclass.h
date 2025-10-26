@@ -70,7 +70,10 @@ public:
     bool GetAttributes(const SQObjectPtr &key,SQObjectPtr &outval);
     void Lock() { _locked = true; if(_base) _base->Lock(); }
     void Release() {
-        if (_hook) { _hook(_typetag,0);}
+        _uiRef++;
+        if (_hook) { _hook(_typetag, 0); }
+        _uiRef--;
+        if(_uiRef > 0) return;
         sq_delete(this, SQClass);
     }
     void Finalize();
