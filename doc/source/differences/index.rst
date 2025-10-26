@@ -25,6 +25,7 @@ New functionality
 
 - **geterrorhandler** function
 - **getdefaultdelegate** function
+- **setreleasehook** function
 - **getstacktop** function (used for debugging only)
 - **getstacksize** function (used for debugging only)
 - **rawstring** function

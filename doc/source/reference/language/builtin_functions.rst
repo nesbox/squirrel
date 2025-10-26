@@ -90,6 +90,27 @@ sets the const table of the VM; returns the previous const table.
     |  "thread"    |  default thread delegate                                                                |
     +--------------+-----------------------------------------------------------------------------------------+
 
+.. js:function:: setreleasehook(class_or_instance, callback_or_null)
+
+| Registers or removes a release callback for a given class or class instance.
+| The callback will be invoked just before the object is released by the VM.
+
+- class_or_instance: A class or instance to attach the release hook to.
+- callback_or_null: A function to be called before the object is released, or null to remove an existing hook.
+
+Important Notes:
+
+- The callback will be invoked with the object being released bound to `this`. This allows you to access its state or perform cleanup logic.
+- You must not increase the reference count of the object inside the release hook. Doing so can prevent the object from being properly collected, leading to memory leaks or undefined behavior.
+- If a release hook is already set on the object, attempting to set another one will raise an error.
+
+Example::
+
+    setreleasehook(myInstance, function()
+    {
+        print("Cleaning up: " + this);
+    })
+
 .. js:function:: assert(exp, [message])
 
 throws an exception if exp is null or false. Throws "assertion failed" string by default, or message if specified.

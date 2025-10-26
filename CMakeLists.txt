@@ -5,7 +5,7 @@ project(squirrel
 	HOMEPAGE_URL "http://squirrel-lang.org/"
 )
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(SQ_GENERATE_SQUIRREL "This option generates squirrel project. By default this option is set to ON" ON)

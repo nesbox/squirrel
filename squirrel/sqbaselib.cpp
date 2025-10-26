@@ -9,6 +9,7 @@
 #include "sqfuncproto.h"
 #include "sqclosure.h"
 #include "sqclass.h"
+#include "sqstdaux.h"
 #include <stdlib.h>
 #include <stdarg.h>
 #include <ctype.h>
@@ -131,6 +132,138 @@ static SQInteger base_dump(HSQUIRRELVM v)
 
     sq_pushstring(v, result.c_str(), result.size());
     return 1;
+}
+
+struct ReleaseHookContext
+{
+    HSQUIRRELVM vm;
+    HSQOBJECT object;
+};
+
+static SQInteger release_hook(SQUserPointer ptr, SQInteger size)
+{
+    auto context = reinterpret_cast<ReleaseHookContext*>(ptr);
+
+    HSQUIRRELVM vm = context->vm;
+    HSQOBJECT obj = context->object;
+
+    SQInteger top = sq_gettop(vm);
+
+    sq_pushregistrytable(vm);
+    sq_pushstring(vm, "__release_hooks", -1);
+
+    if (SQ_FAILED(sq_get(vm, -2)))
+    {
+        sq_settop(vm, top);
+        return 0;
+    }
+
+    sq_remove(vm, -2); // remove registry table
+    sq_pushinteger(vm, obj._unVal.nInteger);
+
+    if (SQ_FAILED(sq_get(vm, -2)))
+    {
+        sq_settop(vm, top);
+        return 0;
+    }
+
+    sq_pushobject(vm, obj);
+    sq_call(vm, 1, SQFalse, SQTrue);
+
+	delete context;
+
+	sq_pushinteger(vm, obj._unVal.nInteger);
+	sq_deleteslot(vm, -2, SQFalse);
+
+	sq_settop(vm, top);
+	return 0;
+}
+
+static SQInteger base_setreleasehook(HSQUIRRELVM vm)
+{
+	HSQOBJECT sq_class_or_instance;
+	sq_getstackobj(vm, 2, &sq_class_or_instance);
+
+	HSQOBJECT sq_callback_or_null;
+	sq_getstackobj(vm, 3, &sq_callback_or_null);
+
+	HSQOBJECT sq_key;
+	sq_key._type = OT_INTEGER;
+	sq_key._unVal.pUserPointer = sq_class_or_instance._unVal.pUserPointer;
+
+    sq_pushregistrytable(vm);
+    sq_pushstring(vm, "__release_hooks", -1);
+
+    if (SQ_FAILED(sq_get(vm, -2)))
+    {
+        sq_pushstring(vm, "__release_hooks", -1);
+
+        sq_newtable(vm); // create "__release_hooks" table
+
+        HSQOBJECT table;
+        sq_getstackobj(vm, -1, &table);
+
+        sq_newslot(vm, -3, SQFalse);
+        sq_pushobject(vm, table);
+    }
+
+    sq_remove(vm, -2); // remove registry table
+
+	if (sq_class_or_instance._type != OT_INSTANCE && sq_class_or_instance._type != OT_CLASS)
+		return sqstd_throwerrorf(vm, "parameter %d has an invalid type '%s' ; expected: '%s'", 1, sq_gettype(vm, 2), "instance|class");
+
+	if (sq_callback_or_null._type != OT_CLOSURE && sq_callback_or_null._type != OT_NULL)
+	    return sqstd_throwerrorf(vm, "parameter %d has an invalid type '%s' ; expected: '%s'", 2, sq_gettype(vm, 3), "function|null");
+
+    sq_pushobject(vm, sq_key);
+	if (sq_callback_or_null._type == OT_CLOSURE && sq_getreleasehook(vm, 2) != nullptr && SQ_FAILED(sq_get(vm, -2)))
+		return sq_throwerror(vm, "Cannot set a release hook on a object that already has one!");
+
+    sq_poptop(vm); // pop get value
+
+	if (sq_callback_or_null._type == OT_CLOSURE)
+	{
+	    sq_pushinteger(vm, sq_key._unVal.nInteger);
+	    sq_pushobject(vm, sq_callback_or_null);
+	    sq_newslot(vm, -3, SQFalse);
+
+		if (sq_class_or_instance._type == OT_INSTANCE)
+			sq_setinstanceup(vm, 2,  new ReleaseHookContext { .vm = vm, .object = { ._type = OT_INSTANCE, ._unVal = { .pUserPointer = sq_class_or_instance._unVal.pUserPointer } } });
+		else if (sq_class_or_instance._type == OT_CLASS)
+			sq_settypetag(vm, 2, new ReleaseHookContext { .vm = vm, .object = { ._type = OT_CLASS, ._unVal = { .pUserPointer = sq_class_or_instance._unVal.pUserPointer } } });
+
+		sq_setreleasehook(vm, 2, release_hook);
+	}
+	else if (sq_callback_or_null._type == OT_NULL)
+	{
+        sq_pushobject(vm, sq_key);
+        if (SQ_FAILED(sq_get(vm, -2)))
+            return 0;
+
+        sq_poptop(vm); // pop callback
+	    sq_deleteslot(vm, -2, SQFalse);
+
+		if (sq_class_or_instance._type == OT_INSTANCE)
+		{
+			SQUserPointer ptr;
+			if (sq_getinstanceup(vm, 2, &ptr, 0, SQFalse))
+				delete static_cast<ReleaseHookContext*>(ptr);
+
+			sq_setinstanceup(vm, 2, nullptr);
+		}
+		else if (sq_class_or_instance._type == OT_CLASS)
+		{
+			SQUserPointer ptr;
+			if (sq_gettypetag(vm, 2, &ptr))
+				delete static_cast<ReleaseHookContext*>(ptr);
+
+			sq_settypetag(vm, 2, nullptr);
+		}
+
+		sq_setreleasehook(vm, 2, nullptr);
+	}
+
+	return 0;
 }
 
 #ifndef NO_GARBAGE_COLLECTOR
@@ -449,6 +582,7 @@ static const SQRegFunction base_funcs[]={
     {_SC("rawstring"),base_rawstring,2, NULL},
     {_SC("callee"),base_callee,0,NULL},
     {_SC("dump"),base_dump,2,NULL},
+    {_SC("setreleasehook"),base_setreleasehook,3,NULL},
 #ifndef NO_GARBAGE_COLLECTOR
     {_SC("collectgarbage"),base_collectgarbage,0, NULL},
     {_SC("resurrectunreachable"),base_resurectureachable,0, NULL},
