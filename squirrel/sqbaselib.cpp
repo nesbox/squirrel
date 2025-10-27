@@ -137,6 +137,7 @@ static SQInteger base_dump(HSQUIRRELVM v)
 struct ReleaseHookContext
 {
     HSQUIRRELVM vm;
+    HSQOBJECT key;
     HSQOBJECT object;
 };
 
@@ -145,6 +146,7 @@ static SQInteger release_hook(SQUserPointer ptr, SQInteger size)
     auto context = reinterpret_cast<ReleaseHookContext*>(ptr);
 
     HSQUIRRELVM vm = context->vm;
+    HSQOBJECT key = context->key;
     HSQOBJECT obj = context->object;
 
     SQInteger top = sq_gettop(vm);
@@ -159,7 +161,7 @@ static SQInteger release_hook(SQUserPointer ptr, SQInteger size)
     }
 
     sq_remove(vm, -2); // remove registry table
-    sq_pushinteger(vm, obj._unVal.nInteger);
+    sq_pushobject(vm, key);
 
     if (SQ_FAILED(sq_get(vm, -2)))
     {
@@ -170,9 +172,10 @@ static SQInteger release_hook(SQUserPointer ptr, SQInteger size)
     sq_pushobject(vm, obj);
     sq_call(vm, 1, SQFalse, SQTrue);
 
+    sq_release(vm, &obj);
 	delete context;
 
-	sq_pushinteger(vm, obj._unVal.nInteger);
+	sq_pushinteger(vm, key._unVal.nInteger);
 	sq_deleteslot(vm, -2, SQFalse);
 
 	sq_settop(vm, top);
@@ -206,7 +209,7 @@ static SQInteger base_getreleasehook(HSQUIRRELVM vm)
     sq_remove(vm, -2); // remove registry table
 
     sq_pushinteger(vm, sq_class_or_instance._unVal.nInteger);
-
+    
     if (SQ_FAILED(sq_get(vm, -2)))
     {
         sq_poptop(vm);
@@ -215,7 +218,36 @@ static SQInteger base_getreleasehook(HSQUIRRELVM vm)
         return 1;
     }
 
-    sq_remove(vm, -2); // remove "__release_hooks" table
+    HSQOBJECT sq_callback;
+    sq_getstackobj(vm, -1, &sq_callback);
+
+    sq_pop(vm, 2); // pop "__release_hooks" table + callback
+
+    sq_newtable(vm);
+    sq_pushstring(vm, "context", -1);
+    if (sq_class_or_instance._type == OT_INSTANCE)
+    {
+        SQUserPointer ptr;
+        if (SQ_SUCCEEDED(sq_getinstanceup(vm, 2, &ptr, 0, SQFalse)))
+        {
+            const auto context = static_cast<ReleaseHookContext*>(ptr);
+            sq_pushobject(vm, context->object);
+        }
+    }
+    else if (sq_class_or_instance._type == OT_CLASS)
+    {
+        SQUserPointer ptr;
+        if (SQ_SUCCEEDED(sq_gettypetag(vm, 2, &ptr)))
+        {
+            const auto context = static_cast<ReleaseHookContext*>(ptr);
+            sq_pushobject(vm, context->object);
+        }
+    }
+    sq_newslot(vm, -3, SQFalse);
+
+    sq_pushstring(vm, "callback", -1);
+    sq_pushobject(vm, sq_callback);
+    sq_newslot(vm, -3, SQFalse);
 
     return 1;
 }
@@ -225,8 +257,11 @@ static SQInteger base_setreleasehook(HSQUIRRELVM vm)
 	HSQOBJECT sq_class_or_instance;
 	sq_getstackobj(vm, 2, &sq_class_or_instance);
 
+    HSQOBJECT sq_context_or_null;
+    sq_getstackobj(vm, 3, &sq_context_or_null);
+
 	HSQOBJECT sq_callback_or_null;
-	sq_getstackobj(vm, 3, &sq_callback_or_null);
+	sq_getstackobj(vm, 4, &sq_callback_or_null);
 
 	HSQOBJECT sq_key;
 	sq_key._type = OT_INTEGER;
@@ -268,10 +303,12 @@ static SQInteger base_setreleasehook(HSQUIRRELVM vm)
 	    sq_pushobject(vm, sq_callback_or_null);
 	    sq_newslot(vm, -3, SQFalse);
 
+        sq_addref(vm, &sq_context_or_null);
+
 		if (sq_class_or_instance._type == OT_INSTANCE)
-			sq_setinstanceup(vm, 2,  new ReleaseHookContext { .vm = vm, .object = { ._type = OT_INSTANCE, ._unVal = { .pUserPointer = sq_class_or_instance._unVal.pUserPointer } } });
+			sq_setinstanceup(vm, 2,  new ReleaseHookContext { .vm = vm, .key = sq_key, .object = sq_context_or_null } );
 		else if (sq_class_or_instance._type == OT_CLASS)
-			sq_settypetag(vm, 2, new ReleaseHookContext { .vm = vm, .object = { ._type = OT_CLASS, ._unVal = { .pUserPointer = sq_class_or_instance._unVal.pUserPointer } } });
+			sq_settypetag(vm, 2, new ReleaseHookContext { .vm = vm, .key = sq_key, .object = sq_context_or_null });
 
 		sq_setreleasehook(vm, 2, release_hook);
 	}
@@ -287,16 +324,26 @@ static SQInteger base_setreleasehook(HSQUIRRELVM vm)
 		if (sq_class_or_instance._type == OT_INSTANCE)
 		{
 			SQUserPointer ptr;
-			if (sq_getinstanceup(vm, 2, &ptr, 0, SQFalse))
-				delete static_cast<ReleaseHookContext*>(ptr);
+			if (SQ_SUCCEEDED(sq_getinstanceup(vm, 2, &ptr, 0, SQFalse)))
+			{
+                auto context = static_cast<ReleaseHookContext*>(ptr);
+
+			    sq_release(vm, &context->object);
+			    delete context;
+			}
 
 			sq_setinstanceup(vm, 2, nullptr);
 		}
 		else if (sq_class_or_instance._type == OT_CLASS)
 		{
 			SQUserPointer ptr;
-			if (sq_gettypetag(vm, 2, &ptr))
-				delete static_cast<ReleaseHookContext*>(ptr);
+			if (SQ_SUCCEEDED(sq_gettypetag(vm, 2, &ptr)))
+			{
+			    auto context = static_cast<ReleaseHookContext*>(ptr);
+
+			    sq_release(vm, &context->object);
+			    delete context;
+			}
 
 			sq_settypetag(vm, 2, nullptr);
 		}
@@ -624,7 +671,7 @@ static const SQRegFunction base_funcs[]={
     {_SC("callee"),base_callee,0,NULL},
     {_SC("dump"),base_dump,2,NULL},
     {_SC("getreleasehook"),base_getreleasehook,2,NULL},
-    {_SC("setreleasehook"),base_setreleasehook,3,NULL},
+    {_SC("setreleasehook"),base_setreleasehook,4,NULL},
 #ifndef NO_GARBAGE_COLLECTOR
     {_SC("collectgarbage"),base_collectgarbage,0, NULL},
     {_SC("resurrectunreachable"),base_resurectureachable,0, NULL},

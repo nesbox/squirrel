@@ -97,40 +97,49 @@ sets the const table of the VM; returns the previous const table.
 
 - class_or_instance: A class or instance to query for an existing release hook.
 
-Important Notes:
+**Return Value:**
 
-- The returned value is either the function previously set via `setreleasehook`, or `null` if no hook is registered.
-- This function does not invoke the hook — it only returns the reference.
-- The returned function, if any, will be bound to the object when invoked during release.
+If a release hook is registered, this function returns a table formatted as follows::
 
-Example::
 
-    local hook = getreleasehook(myInstance);
-    if (hook != null)
     {
-        print("Hook is set for this instance.");
+        context = <object>,    // the given context bound to class or class instance
+        callback = <function>  // the release hook function
     }
 
-.. js:function:: setreleasehook(class_or_instance, callback_or_null)
+.. js:function:: setreleasehook(class_or_instance, context, callback_or_null)
 
 | Registers or removes a release callback for a given class or class instance.
 | The callback will be invoked just before the object is released by the VM.
 
 - class_or_instance: A class or instance to attach the release hook to.
+- context: A custom value that will be passed in to the release hook as `this`. Can't be class instance or class itself! (it won't never be free in such case)
 - callback_or_null: A function to be called before the object is released, or null to remove an existing hook.
-
-Important Notes:
-
-- The callback will be invoked with the object being released bound to `this`. This allows you to access its state or perform cleanup logic.
-- You must not increase the reference count of the object inside the release hook. Doing so can prevent the object from being properly collected, leading to memory leaks or undefined behavior.
-- If a release hook is already set on the object via `sq_setreleasehook`, attempting to set another one will raise an error.
 
 Example::
 
-    setreleasehook(myInstance, function()
+    class Foo
     {
-        print("Cleaning up: " + this);
-    })
+        constructor()
+        {
+            setreleasehook(this, {msg = "Releasing instance: " + this}, this.instance_release);
+        }
+
+        function instance_release()
+        {
+            print(this.msg);
+        }
+
+        static function class_release()
+        {
+            print(this.msg);
+        }
+    }
+
+    setreleasehook(Foo, {msg = "Releasing class: " + Foo}, Foo.class_release);
+
+    local obj = Foo();
+    delete this["Foo"];
 
 .. js:function:: assert(exp, [message])
 
