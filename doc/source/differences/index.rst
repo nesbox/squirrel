@@ -18,6 +18,7 @@ New features
 - **local class** expression is now supported
 - **_get** metamethod will also affect **in** operator
 - Class instances now support **foreach** iteration
+- `enum` will use previous integer value incremented by one to assign next value
 
 ==================
 New functionality
