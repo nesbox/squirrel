@@ -14,6 +14,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <string>
+#include <stack>
+#include <unordered_set>
 
 static bool str2num(const SQChar *s,SQObjectPtr &res,SQInteger base)
 {
@@ -43,31 +45,72 @@ static bool str2num(const SQChar *s,SQObjectPtr &res,SQInteger base)
     return true;
 }
 
-static void dump_object(HSQUIRRELVM v, const HSQOBJECT& obj, std::string& out)
+static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& out)
 {
-    switch (obj._type)
+    std::unordered_set<const void*> visited;
+
+    struct DumpFrame
     {
+        HSQOBJECT obj;
+        bool is_key = false;
+        SQInteger index = 0;
+        bool first = true;
+        bool started = false;
+    };
+
+    std::stack<DumpFrame> stack;
+    stack.push({ root_obj });
+
+    while (!stack.empty())
+    {
+        DumpFrame& frame = stack.top();
+        HSQOBJECT obj = frame.obj;
+
+        switch (obj._type)
+        {
         case OT_STRING:
             out += "\"" + std::string(_stringval(obj)) + "\"";
+            stack.pop();
             break;
 
         case OT_ARRAY:
         {
-            out += "[ ";
-
             SQArray* array = _array(obj);
-            for (SQInteger i = 0, size = array->Size(); i < size; ++i)
+            if (!frame.started && visited.count(array))
             {
-                if (i > 0) out += ", ";
-
-                SQObjectPtr val;
-                if (!array->Get(i, val))
-                    break;
-
-                dump_object(v, val, out);
+                out += "<cycle>";
+                stack.pop();
+                break;
             }
 
-            out += " ]";
+            if (!frame.started)
+            {
+                frame.started = true;
+                visited.insert(array);
+                out += "[ ";
+            }
+
+            if (frame.index >= array->Size())
+            {
+                out += " ]";
+                visited.erase(array);
+                stack.pop();
+                break;
+            }
+
+            if (frame.index > 0)
+                out += ", ";
+
+            SQObjectPtr val;
+            if (array->Get(frame.index, val))
+            {
+                ++frame.index;
+                stack.push({ val });
+            }
+            else
+            {
+                stack.pop();
+            }
             break;
         }
 
@@ -75,50 +118,77 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT& obj, std::string& out)
         case OT_CLASS:
         case OT_INSTANCE:
         {
+            const void* ptr = _table(obj);
             if (SQObjectPtr closure; is_delegable(obj) && _delegable(obj)->GetMetaMethod(v, MT_TOSTRING, closure)) {
                 SQObjectPtr res;
                 v->ToString(obj, res);
 
                 out += _stringval(res);
-                return;
+                visited.erase(ptr);
+                stack.pop();
+                break;
             }
 
-            out += "{ ";
-
-            sq_pushobject(v, obj); // push container
-            sq_pushnull(v); // push initial iterator
-
-            bool first = true;
-            while (SQ_SUCCEEDED(sq_next(v, -2)))
+            if (!frame.started && visited.count(ptr))
             {
-                if (!first) out += ", ";
-                first = false;
-
-                HSQOBJECT key;
-                sq_getstackobj(v, -2, &key);
-
-                HSQOBJECT val;
-                sq_getstackobj(v, -1, &val);
-
-                sq_pop(v, 2); // pop key & val
-
-                dump_object(v, key, out);
-                out += ": ";
-                dump_object(v, val, out);
+                out += "<cycle>";
+                stack.pop();
+                break;
             }
 
-            sq_pop(v, 2); // pop iterator + container
+            if (!frame.started)
+            {
+                frame.started = true;
 
-            out += " }";
+                visited.insert(ptr);
+
+                out += "{ ";
+
+                sq_pushobject(v, obj);
+                sq_pushnull(v);
+            }
+
+            if (SQ_FAILED(sq_next(v, -2)))
+            {
+                out += " }";
+
+                sq_pop(v, 2);
+
+                visited.erase(ptr);
+                stack.pop();
+                break;
+            }
+
+            if (!frame.first)
+                out += ", ";
+
+            frame.first = false;
+
+            HSQOBJECT key, val;
+            sq_getstackobj(v, -2, &key);
+            sq_getstackobj(v, -1, &val);
+            sq_pop(v, 2);
+
+            stack.push({ {val} });
+            stack.push({ {key}, true});
+
             break;
         }
 
-    default:
-        if (SQObjectPtr res; v->ToString(obj, res))
-            out += _stringval(res);
-        else
-            out += "<unknown>";
-        break;
+        default:
+            if (SQObjectPtr res; v->ToString(obj, res))
+                out += _stringval(res);
+            else
+                out += "<unknown>";
+
+            stack.pop();
+            break;
+        }
+
+        if (frame.is_key)
+        {
+            out += ": ";
+        }
     }
 }
 
