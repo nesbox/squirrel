@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sqstdsystem.h>
+#include <chrono>
 
 #ifdef SQUNICODE
 #include <wchar.h>
@@ -50,9 +51,12 @@ static SQInteger _system_system(HSQUIRRELVM v)
     return sq_throwerror(v,_SC("wrong param"));
 }
 
+const auto start_time = std::chrono::steady_clock::now();
 static SQInteger _system_clock(HSQUIRRELVM v)
 {
-    sq_pushfloat(v,((SQFloat)clock())/(SQFloat)CLOCKS_PER_SEC);
+    const auto now = std::chrono::steady_clock::now();
+    const std::chrono::duration<SQFloat> elapsed = now - start_time;
+    sq_pushfloat(v, elapsed.count());
     return 1;
 }
 
