@@ -59,7 +59,9 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
     };
 
     std::stack<DumpFrame> stack;
+
     stack.push({ root_obj });
+    sq_addref(v, const_cast<HSQOBJECT*>(&root_obj));
 
     while (!stack.empty())
     {
@@ -105,7 +107,9 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
             if (array->Get(frame.index, val))
             {
                 ++frame.index;
+
                 stack.push({ val });
+                sq_addref(v, &val);
             }
             else
             {
@@ -165,12 +169,17 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
             frame.first = false;
 
             HSQOBJECT key, val;
+
             sq_getstackobj(v, -2, &key);
             sq_getstackobj(v, -1, &val);
-            sq_pop(v, 2);
 
             stack.push({ {val} });
+            sq_addref(v, &key);
+
             stack.push({ {key}, true});
+            sq_addref(v, &val);
+
+            sq_pop(v, 2);
 
             break;
         }
@@ -189,6 +198,8 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
         {
             out += ": ";
         }
+
+        sq_release(v, &obj);
     }
 }
 
