@@ -216,7 +216,7 @@ SQInteger SQInstance::Next(const SQObjectPtr& refpos, SQObjectPtr& outkey, SQObj
             return idx;
         }
 
-        newpos = idx + 1;
+        newpos = idx;
     }
 
     return idx;
