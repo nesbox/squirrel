@@ -53,3 +53,4 @@ Changes
 
 - **regexp** modern engine support via C++ STL regex library used under the hood
 - **regexp** capture methods support optional groups by returning **null** in array results
+- **clock** function will now return the same results on every platform.
