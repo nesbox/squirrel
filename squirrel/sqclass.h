@@ -68,6 +68,7 @@ public:
     }
     bool SetAttributes(const SQObjectPtr &key,const SQObjectPtr &val);
     bool GetAttributes(const SQObjectPtr &key,SQObjectPtr &outval);
+    bool ClassOf(SQClass *trg);
     void Lock() { _locked = true; if(_base) _base->Lock(); }
     void Release() {
         _uiRef++;

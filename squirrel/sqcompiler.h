@@ -71,7 +71,7 @@ struct SQVM;
 #define TK_ENUM 323
 #define TK_CONST 324
 #define TK_RAWCALL 325
-
+#define TK_CLASSOF 326
 
 
 typedef void(*CompilerErrorFunc)(void *ud, const SQChar *s);

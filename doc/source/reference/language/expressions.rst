@@ -157,6 +157,20 @@ Returns true if *keyexp* is a valid key in *tableexp* ::
     if(123 in t) dostuff();
 
 ^^^^^^^^^^^^^^^^^^^
+classof operator
+^^^^^^^^^^^^^^^^^^^
+
+.. index::
+    pair: classof operator; Operators
+
+::
+
+    exp := classexp1 'classof' classexp2
+
+Tests whether *classexp1* is the same class as *classexp2* or derives from it.
+Returns true if *classexp1* is *classexp2* or extends *classexp2* anywhere in its inheritance chain.
+
+^^^^^^^^^^^^^^^^^^^
 instanceof operator
 ^^^^^^^^^^^^^^^^^^^
 
@@ -243,7 +257,7 @@ Operators precedence
 +---------------------------------------+-----------+
 | ``<<, >>, >>>``                       |           |
 +---------------------------------------+-----------+
-| ``<, <=, >, >=, instanceof``          |           |
+| ``<, <=, >, >=, classof, instanceof`` |           |
 +---------------------------------------+-----------+
 | ``==, !=, <=>``                       |           |
 +---------------------------------------+-----------+

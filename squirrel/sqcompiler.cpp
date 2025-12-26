@@ -551,6 +551,7 @@ public:
         case TK_GE: BIN_EXP(_OP_CMP, &SQCompiler::ShiftExp,CMP_GE); break;
         case TK_LE: BIN_EXP(_OP_CMP, &SQCompiler::ShiftExp,CMP_LE); break;
         case TK_IN: BIN_EXP(_OP_EXISTS, &SQCompiler::ShiftExp); break;
+        case TK_CLASSOF: BIN_EXP(_OP_CLASSOF, &SQCompiler::ShiftExp); break;
         case TK_INSTANCEOF: BIN_EXP(_OP_INSTANCEOF, &SQCompiler::ShiftExp); break;
         default: return;
         }

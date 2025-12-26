@@ -28,19 +28,19 @@ Keywords
 The following words are reserved and cannot be used as identifiers:
 
 +------------+------------+-----------+------------+------------+-------------+
-| base       | break      | case      | catch      | class      | clone       |
+| base       | break      | case      | catch      | class      | classof     |
 +------------+------------+-----------+------------+------------+-------------+
-| continue   | const      | default   | delete     | else       | enum        |
+| clone      | continue   | const     | default    | delete     | else        |
 +------------+------------+-----------+------------+------------+-------------+
-| extends    | for        | foreach   | function   | if         | in          |
+| enum       | extends    | for       | foreach    | function   | if          |
 +------------+------------+-----------+------------+------------+-------------+
-| local      | null       | resume    | return     | switch     | this        |
+| in         | local      | null      | resume     | return     | switch      |
 +------------+------------+-----------+------------+------------+-------------+
-| throw      | try        | typeof    | while      | yield      | constructor |
+| this       | throw      | try       | typeof     | while      | yield       |
 +------------+------------+-----------+------------+------------+-------------+
-| instanceof | true       | false     | static     | __LINE__   | __FILE__    |
+| constructor| instanceof | true      | false      | static     | __LINE__    |
 +------------+------------+-----------+------------+------------+-------------+
-| rawcall    |            |           |            |            |             |
+| __FILE__   | rawcall    |           |            |            |             |
 +------------+------------+-----------+------------+------------+-------------+
 
 Keywords are covered in detail later in this document.

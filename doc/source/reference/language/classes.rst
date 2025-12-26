@@ -111,6 +111,16 @@ the same rules that apply to a table(operator ``<-``).::
 
 After a class is instantiated is no longer possible to add new properties however is possible to add or replace methods.
 
+The operator ``classof`` tests if a class is extending a certain class or is a certain class.::
+
+    class Animal {}
+    class Dog extends Animal {}
+    
+    print(Animal classof Animal);  // true
+    print(Dog classof Dog);        // true
+    print(Dog classof Animal);     // true
+    print(Animal classof Dog);     // false
+
 ^^^^^^^^^^^^^^^^
 Static variables
 ^^^^^^^^^^^^^^^^

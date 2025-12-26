@@ -149,6 +149,19 @@ bool SQClass::GetAttributes(const SQObjectPtr &key,SQObjectPtr &outval)
     return false;
 }
 
+bool SQClass::ClassOf(SQClass* trg)
+{
+    SQClass* c = trg;
+    while (c != NULL) {
+        if (c == this)
+            return true;
+
+        c = c->_base;
+    }
+
+    return false;
+}
+
 ///////////////////////////////////////////////////////////////////////
 void SQInstance::Init(SQSharedState *ss)
 {
