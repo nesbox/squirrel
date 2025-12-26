@@ -633,6 +633,9 @@ Class
 
 returns a new instance of the class. this function does not invoke the instance constructor. The constructor must be explicitly called (eg. class_inst.constructor(class_inst) ).
 
+.. js:function:: class.getbase()
+
+returns a base class of the class. if the class is flat (not using `extends` keyword) it will return `null` instead.
 
 .. js:function:: class.getattributes(membername)
 
