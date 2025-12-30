@@ -1,7 +1,3 @@
 ## Changelog
 
-- Fixed `clock` squirrel function incosistent behaviour across different platforms
-- Fixed possible crashes in `dump` function due to lack of ref increment while traversing through the printed object
-- Fixed skipping `instance members` while iterating over `class instance`.
-- Added missing documentation for `class.getbase`.
-- Added `classof` operator (similar to `instanceof`, but works only on classes).
+- Added `.toblob` conversion method for `default delegates`.
