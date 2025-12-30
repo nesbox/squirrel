@@ -2,6 +2,11 @@
 #ifndef _SQSTD_BLOBIMPL_H_
 #define _SQSTD_BLOBIMPL_H_
 
+#include <sqstdio.h>
+#include <string.h>
+
+#define SQSTD_BLOB_TYPE_TAG ((SQUnsignedInteger)(SQSTD_STREAM_TYPE_TAG | 0x00000002))
+
 struct SQBlob : public SQStream
 {
     SQBlob(SQInteger size) {

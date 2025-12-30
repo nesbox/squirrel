@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <squirrel.h>
 #include <sqstdio.h>
 #include <sqstdblob.h>
 #include "sqstdstream.h"

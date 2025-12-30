@@ -2,6 +2,8 @@
 #ifndef _SQSTD_STREAM_H_
 #define _SQSTD_STREAM_H_
 
+#include <squirrel.h>
+
 SQInteger _stream_readblob(HSQUIRRELVM v);
 SQInteger _stream_readn(HSQUIRRELVM v);
 SQInteger _stream_read(HSQUIRRELVM v);

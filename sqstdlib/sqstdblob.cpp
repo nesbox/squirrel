@@ -1,16 +1,11 @@
 /* see copyright notice in squirrel.h */
 #include <new>
 #include <squirrel.h>
-#include <sqstdio.h>
-#include <string.h>
 #include <sqstdblob.h>
 #include "sqstdstream.h"
 #include "sqstdblobimpl.h"
 
-#define SQSTD_BLOB_TYPE_TAG ((SQUnsignedInteger)(SQSTD_STREAM_TYPE_TAG | 0x00000002))
-
 //Blob
-
 
 #define SETUP_BLOB(v) \
     SQBlob *self = NULL; \
