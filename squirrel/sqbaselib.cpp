@@ -12,6 +12,7 @@
 #include "sqstdaux.h"
 #include <stdlib.h>
 #include <stdarg.h>
+#include <sqstdblob.h>
 #include <ctype.h>
 #include <string>
 #include <stack>
@@ -858,6 +859,24 @@ static SQInteger default_delegate_tostring(HSQUIRRELVM v)
     return 1;
 }
 
+static SQInteger default_delegate_toblob(HSQUIRRELVM v)
+{
+    if(SQ_FAILED(sq_tostring(v,1)))
+        return SQ_ERROR;
+
+    const SQChar* string;
+    SQInteger string_length;
+
+    sq_getstringandsize(v, -1, &string, &string_length);
+    sq_poptop(v);
+
+    SQUserPointer buffer = sqstd_createblob(v, string_length);
+    memcpy(buffer, string, string_length);
+
+    sq_remove(v, -2);
+    return 1;
+}
+
 static SQInteger obj_delegate_weakref(HSQUIRRELVM v)
 {
     sq_weakref(v,1);
@@ -1011,6 +1030,7 @@ const SQRegFunction SQSharedState::_table_default_delegate_funcz[]={
     {_SC("rawin"),container_rawexists,2, _SC("t")},
     {_SC("weakref"),obj_delegate_weakref,1, NULL },
     {_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+    {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
     {_SC("clear"),obj_clear,1, _SC(".")},
     {_SC("setdelegate"),table_setdelegate,2, _SC(".t|o")},
     {_SC("getdelegate"),table_getdelegate,1, _SC(".")},
@@ -1374,6 +1394,7 @@ const SQRegFunction SQSharedState::_array_default_delegate_funcz[]={
     {_SC("slice"),array_slice,-1, _SC("ann")},
     {_SC("weakref"),obj_delegate_weakref,1, NULL },
     {_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+    {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
     {_SC("clear"),obj_clear,1, _SC(".")},
     {_SC("map"),array_map,2, _SC("ac")},
     {_SC("apply"),array_apply,2, _SC("ac")},
@@ -1444,6 +1465,7 @@ const SQRegFunction SQSharedState::_string_default_delegate_funcz[]={
     {_SC("tointeger"),default_delegate_tointeger,-1, _SC("sn")},
     {_SC("tofloat"),default_delegate_tofloat,1, _SC("s")},
     {_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+    {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
     {_SC("slice"),string_slice,-1, _SC("s n  n")},
     {_SC("find"),string_find,-2, _SC("s s n")},
     {_SC("tolower"),string_tolower,-1, _SC("s n n")},
@@ -1457,6 +1479,7 @@ const SQRegFunction SQSharedState::_number_default_delegate_funcz[]={
     {_SC("tointeger"),default_delegate_tointeger,1, _SC("n|b")},
     {_SC("tofloat"),default_delegate_tofloat,1, _SC("n|b")},
     {_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+    {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
     {_SC("tochar"),number_delegate_tochar,1, _SC("n|b")},
     {_SC("weakref"),obj_delegate_weakref,1, NULL },
     {NULL,(SQFUNCTION)0,0,NULL}
@@ -1570,6 +1593,7 @@ const SQRegFunction SQSharedState::_closure_default_delegate_funcz[]={
     {_SC("pacall"),closure_pacall,2, _SC("ca")},
     {_SC("weakref"),obj_delegate_weakref,1, NULL },
     {_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+    {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
     {_SC("bindenv"),closure_bindenv,2, _SC("c x|y|t")},
     {_SC("getinfos"),closure_getinfos,1, _SC("c")},
     {_SC("getroot"),closure_getroot,1, _SC("c")},
@@ -1593,6 +1617,7 @@ const SQRegFunction SQSharedState::_generator_default_delegate_funcz[]={
     {_SC("getstatus"),generator_getstatus,1, _SC("g")},
     {_SC("weakref"),obj_delegate_weakref,1, NULL },
     {_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+    {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
     {NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -1775,6 +1800,7 @@ const SQRegFunction SQSharedState::_thread_default_delegate_funcz[] = {
     {_SC("weakref"),obj_delegate_weakref,1, NULL },
     {_SC("getstackinfos"),thread_getstackinfos,2, _SC("vn")},
     {_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+    {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
     {NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -1838,6 +1864,7 @@ const SQRegFunction SQSharedState::_class_default_delegate_funcz[] = {
     {_SC("rawin"),container_rawexists,2, _SC("y")},
     {_SC("weakref"),obj_delegate_weakref,1, NULL },
     {_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+    {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
     {_SC("instance"),class_instance,1, _SC("y")},
     {_SC("getbase"),class_getbase,1, _SC("y")},
     {_SC("newmember"),class_newmember,-3, _SC("y")},
@@ -1860,6 +1887,7 @@ const SQRegFunction SQSharedState::_instance_default_delegate_funcz[] = {
     {_SC("rawin"),container_rawexists,2, _SC("x")},
     {_SC("weakref"),obj_delegate_weakref,1, NULL },
     {_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+    {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
     {NULL,(SQFUNCTION)0,0,NULL}
 };
 
@@ -1874,5 +1902,6 @@ const SQRegFunction SQSharedState::_weakref_default_delegate_funcz[] = {
     {_SC("ref"),weakref_ref,1, _SC("r")},
     {_SC("weakref"),obj_delegate_weakref,1, NULL },
     {_SC("tostring"),default_delegate_tostring,1, _SC(".")},
+    {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
     {NULL,(SQFUNCTION)0,0,NULL}
 };
