@@ -6,6 +6,12 @@
 #include <sqstdio.h>
 #include "sqstdstream.h"
 
+#ifdef SQUNICODE
+#define scfgets fgetws
+#else
+#define scfgets fgets
+#endif
+
 #define FILEBUFFERSIZE 8192
 #define SQSTD_FILE_TYPE_TAG ((SQUnsignedInteger)(SQSTD_STREAM_TYPE_TAG | 0x00000001))
 
@@ -162,7 +168,7 @@ static bool _read_line(HSQUIRRELVM v, FILE* f, bool chop)
     SQChar* buffer = (SQChar*)sq_malloc(buffer_size);
 
     do {  /* may need to read several chunks to get whole line */
-        char* buff = &buffer[offset];
+        SQChar* buff = &buffer[offset];
         int i = 0;
 
         while (i < FILEBUFFERSIZE && (c = getc(f)) != EOF && c != '\n')
@@ -244,7 +250,7 @@ static bool _read_chars(HSQUIRRELVM v, FILE* f, size_t n)
 static int _test_eof(HSQUIRRELVM v, FILE* f) {
     int c = getc(f);
     ungetc(c, f);  /* no-op when c == EOF */
-    sq_pushstring(v, "", -1);
+    sq_pushstring(v, _SC(""), -1);
     return (c != EOF);
 }
 
@@ -254,7 +260,7 @@ SQRESULT _file_read(HSQUIRRELVM v)
     bool success = true;
 
     if (argsCount > 1)
-        return sq_throwerror(v, "wrong number of parameters");
+        return sq_throwerror(v, _SC("wrong number of parameters"));
 
     SQFile* self = NULL;
     if (SQ_FAILED(sq_getinstanceup(v, 1, (SQUserPointer*)&self, (SQUserPointer)SQSTD_FILE_TYPE_TAG, SQTrue))
@@ -301,14 +307,14 @@ SQRESULT _file_read(HSQUIRRELVM v)
                         break;
 
                     default:
-                        return sq_throwerror(v, "invalid format");
+                        return sq_throwerror(v, _SC("invalid format"));
                 }
 
                 break;
             }
 
             default:
-                return sq_throwerror(v, "wrong parameter");
+                return sq_throwerror(v, _SC("wrong parameter"));
         }
     }
 
@@ -639,8 +645,7 @@ SQInteger _g_io_readline(HSQUIRRELVM v)
     SQFILE input = (SQFILE)stdin;
     if (sq_gettop(v) >= 2)
         sqstd_getfile(v, 2, &input);
-
-    if (fgets(line, sizeof(line), (FILE*)input) != NULL)
+    if (scfgets(line, sizeof(line), (FILE*)input) != NULL)
         sq_pushstring(v, line, scstrlen(line) - 1);
     else
         sq_pushnull(v);

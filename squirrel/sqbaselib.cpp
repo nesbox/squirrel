@@ -18,6 +18,14 @@
 #include <stack>
 #include <unordered_set>
 
+#ifdef SQUNICODE
+using string = std::wstring;
+#define scstrncmp wcsncmp
+#else
+using string = std::string;
+#define scstrncmp strncmp
+#endif
+
 static bool str2num(const SQChar *s,SQObjectPtr &res,SQInteger base)
 {
     SQChar *end;
@@ -46,7 +54,7 @@ static bool str2num(const SQChar *s,SQObjectPtr &res,SQInteger base)
     return true;
 }
 
-static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& out)
+static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, string& out)
 {
     std::unordered_set<const void*> visited;
 
@@ -72,7 +80,7 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
         switch (obj._type)
         {
         case OT_STRING:
-            out += "\"" + std::string(_stringval(obj)) + "\"";
+            out += _SC("\"") + string(_stringval(obj)) + _SC("\"");
             stack.pop();
             break;
 
@@ -81,7 +89,7 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
             SQArray* array = _array(obj);
             if (!frame.started && visited.count(array))
             {
-                out += "<cycle>";
+                out += _SC("<cycle>");
                 stack.pop();
                 break;
             }
@@ -90,19 +98,19 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
             {
                 frame.started = true;
                 visited.insert(array);
-                out += "[ ";
+                out += _SC("[ ");
             }
 
             if (frame.index >= array->Size())
             {
-                out += " ]";
+                out += _SC(" ]");
                 visited.erase(array);
                 stack.pop();
                 break;
             }
 
             if (frame.index > 0)
-                out += ", ";
+                out += _SC(", ");
 
             SQObjectPtr val;
             if (array->Get(frame.index, val))
@@ -136,7 +144,7 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
 
             if (!frame.started && visited.count(ptr))
             {
-                out += "<cycle>";
+                out += _SC("<cycle>");
                 stack.pop();
                 break;
             }
@@ -147,7 +155,7 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
 
                 visited.insert(ptr);
 
-                out += "{ ";
+                out += _SC("{ ");
 
                 sq_pushobject(v, obj);
                 sq_pushnull(v);
@@ -155,7 +163,7 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
 
             if (SQ_FAILED(sq_next(v, -2)))
             {
-                out += " }";
+                out += _SC(" }");
 
                 sq_pop(v, 2);
 
@@ -165,7 +173,7 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
             }
 
             if (!frame.first)
-                out += ", ";
+                out += _SC(", ");
 
             frame.first = false;
 
@@ -189,7 +197,7 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
             if (SQObjectPtr res; v->ToString(obj, res))
                 out += _stringval(res);
             else
-                out += "<unknown>";
+                out += _SC("<unknown>");
 
             stack.pop();
             break;
@@ -197,7 +205,7 @@ static void dump_object(HSQUIRRELVM v, const HSQOBJECT root_obj, std::string& ou
 
         if (frame.is_key)
         {
-            out += ": ";
+            out += _SC(": ");
         }
 
         sq_release(v, &obj);
@@ -209,7 +217,7 @@ static SQInteger base_dump(HSQUIRRELVM v)
     HSQOBJECT obj;
     sq_getstackobj(v, 2, &obj);
 
-    std::string result;
+    string result;
     dump_object(v, obj, result);
 
     sq_pushstring(v, result.c_str(), result.size());
@@ -234,7 +242,7 @@ static SQInteger release_hook(SQUserPointer ptr, SQInteger size)
     SQInteger top = sq_gettop(vm);
 
     sq_pushregistrytable(vm);
-    sq_pushstring(vm, "__release_hooks", -1);
+    sq_pushstring(vm, _SC("__release_hooks"), -1);
 
     if (SQ_FAILED(sq_get(vm, -2)))
     {
@@ -270,14 +278,14 @@ static SQInteger base_getreleasehook(HSQUIRRELVM vm)
 	sq_getstackobj(vm, 2, &sq_class_or_instance);
 
     if (sq_class_or_instance._type != OT_INSTANCE && sq_class_or_instance._type != OT_CLASS)
-		return sqstd_throwerrorf(vm, "parameter %d has an invalid type '%s' ; expected: '%s'", 1, sq_gettype(vm, 2), "instance|class");
+		return sqstd_throwerrorf(vm, _SC("parameter %d has an invalid type '%s' ; expected: '%s'"), 1, sq_gettype(vm, 2), _SC("instance|class"));
 
     sq_pushregistrytable(vm);
-    sq_pushstring(vm, "__release_hooks", -1);
+    sq_pushstring(vm, _SC("__release_hooks"), -1);
 
     if (SQ_FAILED(sq_get(vm, -2)))
     {
-        sq_pushstring(vm, "__release_hooks", -1);
+        sq_pushstring(vm, _SC("__release_hooks"), -1);
 
         sq_newtable(vm); // create "__release_hooks" table
 
@@ -306,7 +314,7 @@ static SQInteger base_getreleasehook(HSQUIRRELVM vm)
     sq_pop(vm, 2); // pop "__release_hooks" table + callback
 
     sq_newtable(vm);
-    sq_pushstring(vm, "context", -1);
+    sq_pushstring(vm, _SC("context"), -1);
     if (sq_class_or_instance._type == OT_INSTANCE)
     {
         SQUserPointer ptr;
@@ -327,7 +335,7 @@ static SQInteger base_getreleasehook(HSQUIRRELVM vm)
     }
     sq_newslot(vm, -3, SQFalse);
 
-    sq_pushstring(vm, "callback", -1);
+    sq_pushstring(vm, _SC("callback"), -1);
     sq_pushobject(vm, sq_callback);
     sq_newslot(vm, -3, SQFalse);
 
@@ -350,11 +358,11 @@ static SQInteger base_setreleasehook(HSQUIRRELVM vm)
 	sq_key._unVal.pUserPointer = sq_class_or_instance._unVal.pUserPointer;
 
     sq_pushregistrytable(vm);
-    sq_pushstring(vm, "__release_hooks", -1);
+    sq_pushstring(vm, _SC("__release_hooks"), -1);
 
     if (SQ_FAILED(sq_get(vm, -2)))
     {
-        sq_pushstring(vm, "__release_hooks", -1);
+        sq_pushstring(vm, _SC("__release_hooks"), -1);
 
         sq_newtable(vm); // create "__release_hooks" table
 
@@ -368,14 +376,14 @@ static SQInteger base_setreleasehook(HSQUIRRELVM vm)
     sq_remove(vm, -2); // remove registry table
 
 	if (sq_class_or_instance._type != OT_INSTANCE && sq_class_or_instance._type != OT_CLASS)
-		return sqstd_throwerrorf(vm, "parameter %d has an invalid type '%s' ; expected: '%s'", 1, sq_gettype(vm, 2), "instance|class");
+		return sqstd_throwerrorf(vm, _SC("parameter %d has an invalid type '%s' ; expected: '%s'"), 1, sq_gettype(vm, 2), _SC("instance|class"));
 
 	if (sq_callback_or_null._type != OT_CLOSURE && sq_callback_or_null._type != OT_NULL)
-	    return sqstd_throwerrorf(vm, "parameter %d has an invalid type '%s' ; expected: '%s'", 2, sq_gettype(vm, 3), "function|null");
+	    return sqstd_throwerrorf(vm, _SC("parameter %d has an invalid type '%s' ; expected: '%s'"), 2, sq_gettype(vm, 3), _SC("function|null"));
 
     sq_pushobject(vm, sq_key);
 	if (sq_callback_or_null._type == OT_CLOSURE && sq_getreleasehook(vm, 2) != nullptr && SQ_FAILED(sq_get(vm, -2)))
-		return sq_throwerror(vm, "Cannot set a release hook on a object that already has one!");
+		return sq_throwerror(vm, _SC("Cannot set a release hook on a object that already has one!"));
 
     sq_poptop(vm); // pop get value
 
@@ -482,25 +490,25 @@ static SQRESULT base_getdefaultdelegate(HSQUIRRELVM v)
     const SQChar* type;
     sq_getstring(v, 2, &type);
 
-    if (strncmp(type, "number", sizeof("number")) == 0)
+    if (scstrncmp(type, _SC("number"), sizeof(_SC("number"))) == 0)
         sq_getdefaultdelegate(v, OT_INTEGER);
-    else if (strncmp(type, "string", sizeof("string")) == 0)
+    else if (scstrncmp(type, _SC("string"), sizeof(_SC("string"))) == 0)
         sq_getdefaultdelegate(v, OT_STRING);
-    else if (strncmp(type, "array", sizeof("array")) == 0)
+    else if (scstrncmp(type, _SC("array"), sizeof(_SC("array"))) == 0)
         sq_getdefaultdelegate(v, OT_ARRAY);
-    else if (strncmp(type, "table", sizeof("table")) == 0)
+    else if (scstrncmp(type, _SC("table"), sizeof(_SC("table"))) == 0)
         sq_getdefaultdelegate(v, OT_TABLE);
-    else if (strncmp(type, "class", sizeof("class")) == 0)
+    else if (scstrncmp(type, _SC("class"), sizeof(_SC("class"))) == 0)
         sq_getdefaultdelegate(v, OT_CLASS);
-    else if (strncmp(type, "instance", sizeof("instance")) == 0)
+    else if (scstrncmp(type, _SC("instance"), sizeof(_SC("instance"))) == 0)
         sq_getdefaultdelegate(v, OT_INSTANCE);
-    else if (strncmp(type, "weakref", sizeof("weakref")) == 0)
-        sq_getdefaultdelegate(v, OT_INSTANCE);
-    else if (strncmp(type, "function", sizeof("function")) == 0)
+    else if (scstrncmp(type, _SC("weakref"), sizeof(_SC("weakref"))) == 0)
+        sq_getdefaultdelegate(v, OT_WEAKREF);
+    else if (scstrncmp(type, _SC("function"), sizeof(_SC("function"))) == 0)
         sq_getdefaultdelegate(v, OT_CLOSURE);
-    else if (strncmp(type, "generator", sizeof("generator")) == 0)
+    else if (scstrncmp(type, _SC("generator"), sizeof(_SC("generator"))) == 0)
         sq_getdefaultdelegate(v, OT_GENERATOR);
-    else if (strncmp(type, "thread", sizeof("thread")) == 0)
+    else if (scstrncmp(type, _SC("thread"), sizeof(_SC("thread"))) == 0)
         sq_getdefaultdelegate(v, OT_THREAD);
     else
         sq_pushnull(v);
@@ -740,7 +748,7 @@ static const SQRegFunction base_funcs[]={
     {_SC("setroottable"),base_setroottable,2, NULL},
     {_SC("getconsttable"),base_getconsttable,1, NULL},
     {_SC("setconsttable"),base_setconsttable,2, NULL},
-    {_SC("getdefaultdelegate"),base_getdefaultdelegate,2, ".s"},
+    {_SC("getdefaultdelegate"),base_getdefaultdelegate,2, _SC(".s")},
     {_SC("assert"),base_assert,-2, NULL},
     {_SC("print"),base_print,2, NULL},
     {_SC("error"),base_error,2, NULL},
