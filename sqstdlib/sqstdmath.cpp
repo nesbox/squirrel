@@ -41,11 +41,11 @@ static SQRESULT sq_cmp_vargv(HSQUIRRELVM vm, SQInteger size, SQInteger cmp) {
 
 static SQRESULT sq_cmp_array(HSQUIRRELVM vm, SQInteger cmp) {
 	if (sq_gettype(vm, 2) != OT_ARRAY) {
-		return sq_throwerror(vm, "invalid type tag");
+		return sq_throwerror(vm, _SC("invalid type tag"));
 	}
 
 	if (sq_getsize(vm, 2) == 0) {
-		return sq_throwerror(vm, "empty array");
+		return sq_throwerror(vm, _SC("empty array"));
 	}
 
 	sq_pushnull(vm); // iterator
@@ -205,7 +205,7 @@ static SQRESULT math_round(HSQUIRRELVM vm)
 {
 	SQInteger top = sq_gettop(vm);
 	if (top > 3)
-		return sq_throwerror(vm, "wrong number of parameters");
+		return sq_throwerror(vm, _SC("wrong number of parameters"));
 
 	SQFloat x;
 	sq_getfloat(vm, 2, &x);
@@ -231,7 +231,7 @@ static SQRESULT math_random(HSQUIRRELVM vm)
 {
 	SQInteger top = sq_gettop(vm);
 	if (top > 3)
-		return sq_throwerror(vm, "wrong number of parameters");
+		return sq_throwerror(vm, _SC("wrong number of parameters"));
 
 	if (top == 1)
 	{
@@ -249,7 +249,7 @@ static SQRESULT math_random(HSQUIRRELVM vm)
 		sq_getinteger(vm, 3, &end);
 
 	if (end < begin)
-		return sq_throwerror(vm, "invalid range");
+		return sq_throwerror(vm, _SC("invalid range"));
 
 	std::uniform_int_distribution<SQInteger> distribution(begin, end);
 	sq_pushinteger(vm, distribution(random_engine));

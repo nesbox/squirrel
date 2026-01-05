@@ -6,9 +6,27 @@
 #include <regex>
 #include <string>
 
+#ifdef SQUNICODE
+#include <codecvt>
+
+using string = std::wstring;
+using regex = std::wregex;
+using cmatch = std::wcmatch;
+
+std::wstring to_string(const char* str) { std::wstring_convert<std::codecvt_utf8<wchar_t>> conv; return conv.from_bytes(str); }
+#else
+using string = std::string;
+using regex = std::regex;
+using cmatch = std::cmatch;
+
+std::string to_string(const char* str) { return str; }
+#endif
+
+using regex_error = std::regex_error;
+
 struct SQRex {
-    std::regex regex;
-    std::cmatch matches;
+    regex regex;
+    cmatch matches;
 };
 
 /* public api */
@@ -18,13 +36,13 @@ SQRex *sqstd_rex_compile(const SQChar *pattern,const SQChar **error)
 
     try
     {
-        self->regex = std::move(std::regex(pattern));
+        self->regex = std::move(regex(pattern));
     }
-    catch (std::regex_error& err)
+    catch (regex_error& err)
     {
-        static std::string errMsg;
+        static string errMsg;
 
-        errMsg = err.what();
+        errMsg = to_string(err.what());
         *error = errMsg.c_str();
 
        delete self;
