@@ -343,8 +343,8 @@ struct SQDelegable : public CHAINABLE_OBJ {
 };
 
 SQUnsignedInteger TranslateIndex(const SQObjectPtr &idx);
-typedef sqvector<SQObjectPtr> SQObjectPtrVec;
-typedef sqvector<SQInteger> SQIntVec;
+using SQObjectPtrVec = std::vector<SQObjectPtr>;
+using SQIntVec = std::vector<SQInteger>;
 const SQChar *GetTypeName(const SQObjectPtr &obj1);
 const SQChar *IdType2Name(SQObjectType type);
 

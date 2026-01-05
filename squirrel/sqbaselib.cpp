@@ -1273,7 +1273,7 @@ static bool _sort_compare(HSQUIRRELVM v, SQArray *arr, SQObjectPtr &a,SQObjectPt
         sq_pushroottable(v);
         v->Push(a);
         v->Push(b);
-		SQObjectPtr *valptr = arr->_values._vals;
+		SQObjectPtr *valptr = arr->_values.data();
 		SQUnsignedInteger precallsize = arr->_values.size();
         if(SQ_FAILED(sq_call(v, 3, SQTrue, SQFalse))) {
             if(!sq_isstring( v->_lasterror))
@@ -1284,7 +1284,7 @@ static bool _sort_compare(HSQUIRRELVM v, SQArray *arr, SQObjectPtr &a,SQObjectPt
             v->Raise_Error(_SC("numeric value expected as return value of the compare function"));
             return false;
         }
-		if (precallsize != arr->_values.size() || valptr != arr->_values._vals) {
+		if (precallsize != arr->_values.size() || valptr != arr->_values.data()) {
 			v->Raise_Error(_SC("array resized during sort operation"));
 			return false;
 		}

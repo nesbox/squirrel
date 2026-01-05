@@ -47,7 +47,7 @@ public:
     SQUserPointer _up;
     LexChar _currdata;
     SQSharedState *_sharedstate;
-    sqvector<SQChar> _longstr;
+    std::vector<SQChar> _longstr;
     CompilerErrorFunc _errfunc;
     void *_errtarget;
 };

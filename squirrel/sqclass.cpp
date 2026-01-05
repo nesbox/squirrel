@@ -23,8 +23,8 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
         _constructoridx = _base->_constructoridx;
         _destructoridx = _base->_destructoridx;
         _udsize = _base->_udsize;
-        _defaultvalues.copy(base->_defaultvalues);
-        _methods.copy(base->_methods);
+        _defaultvalues = base->_defaultvalues;
+        _methods = base->_methods;
         _COPY_VECTOR(_metamethods,base->_metamethods,MT_LAST);
         __ObjAddRef(_base);
     }

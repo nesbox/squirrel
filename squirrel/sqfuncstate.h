@@ -78,7 +78,7 @@ struct SQFuncState
     SQInteger _outers;
     bool _optimization;
     SQSharedState *_sharedstate;
-    sqvector<SQFuncState*> _childstates;
+    std::vector<SQFuncState*> _childstates;
     SQInteger GetConstant(const SQObject &cons);
 private:
     CompilerErrorFunc _errfunc;

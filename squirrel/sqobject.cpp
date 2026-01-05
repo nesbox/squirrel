@@ -139,9 +139,9 @@ bool SQGenerator::Yield(SQVM *v,SQInteger target)
 
     _stack.resize(size);
     SQObject _this = v->_stack[v->_stackbase];
-    _stack._vals[0] = ISREFCOUNTED(sq_type(_this)) ? SQObjectPtr(_refcounted(_this)->GetWeakRef(sq_type(_this))) : _this;
+    _stack[0] = ISREFCOUNTED(sq_type(_this)) ? SQObjectPtr(_refcounted(_this)->GetWeakRef(sq_type(_this))) : _this;
     for(SQInteger n =1; n<target; n++) {
-        _stack._vals[n] = v->_stack[v->_stackbase+n];
+        _stack[n] = v->_stack[v->_stackbase+n];
     }
     for(SQInteger j =0; j < size; j++)
     {
@@ -151,7 +151,7 @@ bool SQGenerator::Yield(SQVM *v,SQInteger target)
     _ci = *v->ci;
     _ci._generator=NULL;
     for(SQInteger i=0;i<_ci._etraps;i++) {
-        _etraps.push_back(v->_etraps.top());
+        _etraps.push_back(v->_etraps.back());
         v->_etraps.pop_back();
         // store relative stack base and size in case of resume to other _top
         SQExceptionTrap &et = _etraps.back();
@@ -167,7 +167,7 @@ bool SQGenerator::Resume(SQVM *v,SQObjectPtr &dest)
     if(_state==eDead){ v->Raise_Error(_SC("resuming dead generator")); return false; }
     if(_state==eRunning){ v->Raise_Error(_SC("resuming active generator")); return false; }
     SQInteger size = _stack.size();
-    SQInteger target = &dest - &(v->_stack._vals[v->_stackbase]);
+    SQInteger target = &dest - &(v->_stack[v->_stackbase]);
     assert(target>=0 && target<=255);
     SQInteger newbase = v->_top;
     if(!v->EnterFrame(v->_top, v->_top + size, false))
@@ -183,19 +183,19 @@ bool SQGenerator::Resume(SQVM *v,SQObjectPtr &dest)
 
 
     for(SQInteger i=0;i<_ci._etraps;i++) {
-        v->_etraps.push_back(_etraps.top());
+        v->_etraps.push_back(_etraps.back());
         _etraps.pop_back();
         SQExceptionTrap &et = v->_etraps.back();
         // restore absolute stack base and size
         et._stackbase += newbase;
         et._stacksize += newbase;
     }
-    SQObject _this = _stack._vals[0];
+    SQObject _this = _stack[0];
     v->_stack[v->_stackbase] = sq_type(_this) == OT_WEAKREF ? _weakref(_this)->_obj : _this;
 
     for(SQInteger n = 1; n<size; n++) {
-        v->_stack[v->_stackbase+n] = _stack._vals[n];
-        _stack._vals[n].Null();
+        v->_stack[v->_stackbase+n] = _stack[n];
+        _stack[n].Null();
     }
 
     _state=eRunning;

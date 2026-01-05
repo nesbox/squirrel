@@ -29,7 +29,7 @@ struct SQExceptionTrap{
 
 #define _INLINE
 
-typedef sqvector<SQExceptionTrap> ExceptionsTraps;
+using ExceptionsTraps = std::vector<SQExceptionTrap>;
 
 struct SQVM : public CHAINABLE_OBJ
 {
@@ -47,7 +47,7 @@ struct SQVM : public CHAINABLE_OBJ
         SQBool _root;
     };
 
-typedef sqvector<CallInfo> CallInfoVec;
+using CallInfoVec = std::vector<CallInfo>;
 public:
     void DebugHookProxy(SQInteger type, const SQChar * sourcename, SQInteger line, const SQChar * funcname);
     static void _DebugHookProxy(HSQUIRRELVM v, SQInteger type, const SQChar * sourcename, SQInteger line, const SQChar * funcname);
@@ -162,7 +162,7 @@ public:
     CallInfo* _callsstack;
     SQInteger _callsstacksize;
     SQInteger _alloccallsstacksize;
-    sqvector<CallInfo>  _callstackdata;
+    std::vector<CallInfo> _callstackdata;
 
     ExceptionsTraps _etraps;
     CallInfo *ci;

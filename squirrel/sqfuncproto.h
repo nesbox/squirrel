@@ -48,9 +48,9 @@ struct SQLocalVarInfo
 
 struct SQLineInfo { SQInteger _line;SQInteger _op; };
 
-typedef sqvector<SQOuterVar> SQOuterVarVec;
-typedef sqvector<SQLocalVarInfo> SQLocalVarInfoVec;
-typedef sqvector<SQLineInfo> SQLineInfoVec;
+using SQOuterVarVec = std::vector<SQOuterVar>;
+using SQLocalVarInfoVec = std::vector<SQLocalVarInfo>;
+using SQLineInfoVec = std::vector<SQLineInfo>;
 
 #define _FUNC_SIZE(ni,nl,nparams,nfuncs,nouters,nlineinf,localinf,defparams) (sizeof(SQFunctionProto) \
         +((ni-1)*sizeof(SQInstruction))+(nl*sizeof(SQObjectPtr)) \

@@ -14,9 +14,9 @@
 #include "sqarray.h"
 #include "sqclass.h"
 
-#define TOP() (_stack._vals[_top-1])
-#define TARGET _stack._vals[_stackbase+arg0]
-#define STK(a) _stack._vals[_stackbase+(a)]
+#define TOP() (_stack[_top-1])
+#define TARGET _stack[_stackbase+arg0]
+#define STK(a) _stack[_stackbase+(a)]
 
 bool SQVM::BW_OP(SQUnsignedInteger op,SQObjectPtr &trg,const SQObjectPtr &o1,const SQObjectPtr &o2)
 {
@@ -131,7 +131,7 @@ SQVM::SQVM(SQSharedState *ss)
 void SQVM::Finalize()
 {
     if(_releasehook) { _releasehook(_foreignptr,0); _releasehook = NULL; }
-    if(_openouters) CloseOuters(&_stack._vals[0]);
+    if(_openouters) CloseOuters(&_stack[0]);
     _roottable.Null();
     _lasterror.Null();
     _errorhandler.Null();
@@ -396,12 +396,12 @@ bool SQVM::StartCall(SQClosure *closure,SQInteger target,SQInteger args,SQIntege
         SQArray *arr = SQArray::Create(_ss(this),nvargs);
         SQInteger pbase = stackbase+paramssize;
         for(SQInteger n = 0; n < nvargs; n++) {
-            arr->_values[n] = _stack._vals[pbase];
-            _stack._vals[pbase].Null();
+            arr->_values[n] = _stack[pbase];
+            _stack[pbase].Null();
             pbase++;
 
         }
-        _stack._vals[stackbase+paramssize] = arr;
+        _stack[stackbase+paramssize] = arr;
         //dumpstack(stackbase);
     }
     else if (paramssize != nargs) {
@@ -409,7 +409,7 @@ bool SQVM::StartCall(SQClosure *closure,SQInteger target,SQInteger args,SQIntege
         SQInteger diff;
         if(ndef && nargs < paramssize && (diff = paramssize - nargs) <= ndef) {
             for(SQInteger n = ndef - diff; n < ndef; n++) {
-                _stack._vals[stackbase + (nargs++)] = closure->_defaultparams[n];
+                _stack[stackbase + (nargs++)] = closure->_defaultparams[n];
             }
         }
         else {
@@ -420,7 +420,7 @@ bool SQVM::StartCall(SQClosure *closure,SQInteger target,SQInteger args,SQIntege
     }
 
     if(closure->_env) {
-        _stack._vals[stackbase] = closure->_env->_obj;
+        _stack[stackbase] = closure->_env->_obj;
     }
 
     if(!EnterFrame(stackbase, newtop, tailcall)) return false;
@@ -465,16 +465,16 @@ bool SQVM::Return(SQInteger _arg0, SQInteger _arg1, SQObjectPtr &retval)
     } else if (ci->_target == -1) {
         dest = NULL;
     } else {
-        dest = &_stack._vals[callerbase + ci->_target];
+        dest = &_stack[callerbase + ci->_target];
     }
     if (dest) {
         if(_arg0 != 0xFF) {
-            *dest = _stack._vals[_stackbase+_arg1];
+            *dest = _stack[_stackbase+_arg1];
         }
         else {
             dest->Null();
         }
-        //*dest = (_arg0 != 0xFF) ? _stack._vals[_stackbase+_arg1] : _null_;
+        //*dest = (_arg0 != 0xFF) ? _stack[_stackbase+_arg1] : _null_;
     }
     LeaveFrame();
     return _isroot ? true : false;
@@ -612,11 +612,11 @@ bool SQVM::CLOSURE_OP(SQObjectPtr &target, SQFunctionProto *func,SQInteger bound
     if((ndefparams = func->_ndefaultparams)) {
         for(SQInteger i = 0; i < ndefparams; i++) {
             SQInteger spos = func->_defaultparams[i];
-            closure->_defaultparams[i] = _stack._vals[_stackbase + spos];
+            closure->_defaultparams[i] = _stack[_stackbase + spos];
         }
     }
 	if (boundtarget != 0xFF) {
-		SQObjectPtr &val = _stack._vals[_stackbase + boundtarget];
+		SQObjectPtr &val = _stack[_stackbase + boundtarget];
 		SQObjectType t = sq_type(val);
 		if (t == OT_TABLE || t == OT_CLASS || t == OT_INSTANCE || t == OT_ARRAY) {
 			closure->_env = _refcounted(val)->GetWeakRef(t);
@@ -639,11 +639,11 @@ bool SQVM::CLASS_OP(SQObjectPtr &target,SQInteger baseclass,SQInteger attributes
     SQClass *base = NULL;
     SQObjectPtr attrs;
     if(baseclass != -1) {
-        if(sq_type(_stack._vals[_stackbase+baseclass]) != OT_CLASS) { Raise_Error(_SC("trying to inherit from a %s"),GetTypeName(_stack._vals[_stackbase+baseclass])); return false; }
-        base = _class(_stack._vals[_stackbase + baseclass]);
+        if(sq_type(_stack[_stackbase+baseclass]) != OT_CLASS) { Raise_Error(_SC("trying to inherit from a %s"),GetTypeName(_stack[_stackbase+baseclass])); return false; }
+        base = _class(_stack[_stackbase + baseclass]);
     }
     if(attributes != MAX_FUNC_STACKSIZE) {
-        attrs = _stack._vals[_stackbase+attributes];
+        attrs = _stack[_stackbase+attributes];
     }
     target = SQClass::Create(_ss(this),base);
     if(sq_type(_class(target)->_metamethods[MT_INHERITED]) != OT_NULL) {
@@ -756,7 +756,7 @@ exception_restore:
                     && (!_closure(t)->_function->_bgenerator)){
                     SQObjectPtr clo = t;
                     SQInteger last_top = _top;
-                    if(_openouters) CloseOuters(&(_stack._vals[_stackbase]));
+                    if(_openouters) CloseOuters(&(_stack[_stackbase]));
                     for (SQInteger i = 0; i < arg3; i++) STK(i) = STK(arg2 + i);
                     _GUARD(StartCall(_closure(clo), ci->_target, arg3, _stackbase, true));
                     if (last_top >= _top) {
@@ -798,13 +798,13 @@ exception_restore:
                         switch(sq_type(clo)) {
                             case OT_CLOSURE:
                                 stkbase = _stackbase+arg2;
-                                _stack._vals[stkbase] = inst;
+                                _stack[stkbase] = inst;
                                 _GUARD(StartCall(_closure(clo), -1, arg3, stkbase, false));
                                 break;
                             case OT_NATIVECLOSURE:
                                 bool dummy;
                                 stkbase = _stackbase+arg2;
-                                _stack._vals[stkbase] = inst;
+                                _stack[stkbase] = inst;
                                 _GUARD(CallNative(_nativeclosure(clo), arg3, stkbase, clo, -1, dummy, dummy));
                                 break;
                             default: break; //shutup GCC 4.x
@@ -1033,7 +1033,7 @@ exception_restore:
             case _OP_YIELD:{
                 if(ci->_generator) {
                     if(sarg1 != MAX_FUNC_STACKSIZE) temp_reg = STK(arg1);
-					if (_openouters) CloseOuters(&_stack._vals[_stackbase]);
+					if (_openouters) CloseOuters(&_stack[_stackbase]);
                     _GUARD(ci->_generator->Yield(this,arg2));
 					traps -= ci->_etraps;
                     if(sarg1 != MAX_FUNC_STACKSIZE) _Swap(STK(arg1),temp_reg);//STK(arg1) = temp_reg;
@@ -1108,13 +1108,13 @@ exception_trap:
 
         while( ci ) {
             if(ci->_etraps > 0) {
-                SQExceptionTrap &et = _etraps.top();
+                SQExceptionTrap &et = _etraps.back();
                 ci->_ip = et._ip;
                 _top = et._stacksize;
                 _stackbase = et._stackbase;
-                _stack._vals[_stackbase + et._extarget] = currerror;
+                _stack[_stackbase + et._extarget] = currerror;
                 _etraps.pop_back(); traps--; ci->_etraps--;
-                while(last_top >= _top) _stack._vals[last_top--].Null();
+                while(last_top >= _top) _stack[last_top--].Null();
                 goto exception_restore;
             }
             else if (_debughook) {
@@ -1196,8 +1196,8 @@ bool SQVM::CallNative(SQNativeClosure *nclosure, SQInteger nargs, SQInteger newb
     SQIntVec &tc = nclosure->_typecheck;
     if((tcs = tc.size())) {
         for(SQInteger i = 0; i < nargs && i < tcs; i++) {
-            if((tc._vals[i] != -1) && !(sq_type(_stack._vals[newbase+i]) & tc._vals[i])) {
-                Raise_ParamTypeError(i,tc._vals[i], sq_type(_stack._vals[newbase+i]));
+            if((tc[i] != -1) && !(sq_type(_stack[newbase+i]) & tc[i])) {
+                Raise_ParamTypeError(i,tc[i], sq_type(_stack[newbase+i]));
                 return false;
             }
         }
@@ -1209,10 +1209,10 @@ bool SQVM::CallNative(SQNativeClosure *nclosure, SQInteger nargs, SQInteger newb
 
     SQInteger outers = nclosure->_noutervalues;
     for (SQInteger i = 0; i < outers; i++) {
-        _stack._vals[newbase+nargs+i] = nclosure->_outervalues[i];
+        _stack[newbase+nargs+i] = nclosure->_outervalues[i];
     }
     if(nclosure->_env) {
-        _stack._vals[newbase] = nclosure->_env->_obj;
+        _stack[newbase] = nclosure->_env->_obj;
     }
 
     _nnativecalls++;
@@ -1234,12 +1234,12 @@ bool SQVM::CallNative(SQNativeClosure *nclosure, SQInteger nargs, SQInteger newb
         return false;
     }
     if(ret) {
-        retval = _stack._vals[_top-1];
+        retval = _stack[_top-1];
     }
     else {
         retval.Null();
     }
-    //retval = ret ? _stack._vals[_top-1] : _null_;
+    //retval = ret ? _stack[_top-1] : _null_;
     LeaveFrame();
     return true;
 }
@@ -1670,7 +1670,7 @@ void SQVM::FindOuter(SQObjectPtr &target, SQObjectPtr *stackindex)
     }
     otr = SQOuter::Create(_ss(this), stackindex);
     otr->_next = *pp;
-    otr->_idx  = (stackindex - _stack._vals);
+    otr->_idx  = (stackindex - &_stack[0]);
     __ObjAddRef(otr);
     *pp = otr;
     target = SQObjectPtr(otr);
@@ -1718,9 +1718,9 @@ void SQVM::LeaveFrame() {
     _top = _stackbase + ci->_prevtop;
     ci = (css) ? &_callsstack[css-1] : NULL;
 
-    if(_openouters) CloseOuters(&(_stack._vals[last_stackbase]));
+    if(_openouters) CloseOuters(&(_stack[last_stackbase]));
     while (last_top >= _top) {
-        _stack._vals[last_top--].Null();
+        _stack[last_top--].Null();
     }
 }
 
@@ -1728,7 +1728,7 @@ void SQVM::RelocateOuters()
 {
     SQOuter *p = _openouters;
     while (p) {
-        p->_valptr = _stack._vals + p->_idx;
+        p->_valptr = _stack.data() + p->_idx;
         p = p->_next;
     }
 }

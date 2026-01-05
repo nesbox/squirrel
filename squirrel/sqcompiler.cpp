@@ -246,8 +246,8 @@ public:
             break;}
         case TK_BREAK:
             if(_fs->_breaktargets.size() <= 0)Error(_SC("'break' has to be in a loop block"));
-            if(_fs->_breaktargets.top() > 0){
-                _fs->AddInstruction(_OP_POPTRAP, _fs->_breaktargets.top(), 0);
+            if(_fs->_breaktargets.back() > 0){
+                _fs->AddInstruction(_OP_POPTRAP, _fs->_breaktargets.back(), 0);
             }
             RESOLVE_OUTERS();
             _fs->AddInstruction(_OP_JMP, 0, -1234);
@@ -256,8 +256,8 @@ public:
             break;
         case TK_CONTINUE:
             if(_fs->_continuetargets.size() <= 0)Error(_SC("'continue' has to be in a loop block"));
-            if(_fs->_continuetargets.top() > 0) {
-                _fs->AddInstruction(_OP_POPTRAP, _fs->_continuetargets.top(), 0);
+            if(_fs->_continuetargets.back() > 0) {
+                _fs->AddInstruction(_OP_POPTRAP, _fs->_continuetargets.back(), 0);
             }
             RESOLVE_OUTERS();
             _fs->AddInstruction(_OP_JMP, 0, -1234);
@@ -1438,8 +1438,8 @@ public:
         Lex();
         _fs->AddInstruction(_OP_PUSHTRAP,0,0);
         _fs->_traps++;
-        if(_fs->_breaktargets.size()) _fs->_breaktargets.top()++;
-        if(_fs->_continuetargets.size()) _fs->_continuetargets.top()++;
+        if(_fs->_breaktargets.size()) _fs->_breaktargets.back()++;
+        if(_fs->_continuetargets.size()) _fs->_continuetargets.back()++;
         SQInteger trappos = _fs->GetCurrentPos();
         {
             BEGIN_SCOPE();
@@ -1448,8 +1448,8 @@ public:
         }
         _fs->_traps--;
         _fs->AddInstruction(_OP_POPTRAP, 1, 0);
-        if(_fs->_breaktargets.size()) _fs->_breaktargets.top()--;
-        if(_fs->_continuetargets.size()) _fs->_continuetargets.top()--;
+        if(_fs->_breaktargets.size()) _fs->_breaktargets.back()--;
+        if(_fs->_continuetargets.size()) _fs->_continuetargets.back()--;
         _fs->AddInstruction(_OP_JMP, 0, 0);
         SQInteger jmppos = _fs->GetCurrentPos();
         _fs->SetInstructionParam(trappos, 1, (_fs->GetCurrentPos() - trappos));
