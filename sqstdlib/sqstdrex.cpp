@@ -25,7 +25,7 @@ std::string to_string(const char* str) { return str; }
 using regex_error = std::regex_error;
 
 struct SQRex {
-    regex regex;
+    regex rex;
     cmatch matches;
 };
 
@@ -36,7 +36,7 @@ SQRex *sqstd_rex_compile(const SQChar *pattern,const SQChar **error)
 
     try
     {
-        self->regex = std::move(regex(pattern));
+        self->rex = std::move(regex(pattern));
     }
     catch (regex_error& err)
     {
@@ -60,12 +60,12 @@ void sqstd_rex_free(SQRex *exp)
 
 SQBool sqstd_rex_match(SQRex* exp,const SQChar* text)
 {
-    return std::regex_match(text, exp->regex);
+    return std::regex_match(text, exp->rex);
 }
 
 SQBool sqstd_rex_searchrange(SQRex* exp,const SQChar* text_begin,const SQChar* text_end,const SQChar** out_begin, const SQChar** out_end)
 {
-    if (!std::regex_search(text_begin, text_end, exp->matches, exp->regex))
+    if (!std::regex_search(text_begin, text_end, exp->matches, exp->rex))
         return SQFalse;
 
     if (out_begin) *out_begin = exp->matches[0].first;
@@ -81,7 +81,7 @@ SQBool sqstd_rex_search(SQRex* exp,const SQChar* text, const SQChar** out_begin,
 
 SQInteger sqstd_rex_getsubexpcount(SQRex* exp)
 {
-    return exp->regex.mark_count() + 1;
+    return exp->rex.mark_count() + 1;
 }
 
 SQUIRREL_API SQBool sqstd_rex_getsubexp(SQRex* exp, SQInteger n, SQRexMatch* subexp)
