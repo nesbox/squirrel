@@ -40,6 +40,7 @@ New functionality
 - **round** function
 - **random** function
 - **randomseed** function
+- **runningthread** function
 - **file.read** method
 - **file.write** method
 - **blob.read** method
@@ -48,7 +49,6 @@ New functionality
 - **thread.acall** method
 - **regexp.captureall** method
 - **.toblob** conversion method for **default delegates** which converts the string represenation to **blob** instance
-- **runningthread** function
 
 ==================
 Changes
