@@ -206,6 +206,10 @@ level = 0 is getstackinfos() itself! level = 1 is the current function, level = 
 
 creates a new cooperative thread object(coroutine) and returns it
 
+.. js:function:: runningthread()
+
+returns a currently running thread, or `null` when called on main thread.
+
 .. js:data:: _versionnumber_
 
 integer values describing the version of VM and compiler. e.g. for Squirrel 3.0.1 this value will be 301

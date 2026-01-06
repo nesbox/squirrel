@@ -694,6 +694,15 @@ static SQInteger base_suspend(HSQUIRRELVM v)
     return sq_suspendvm(v);
 }
 
+static SQInteger base_runningthread(HSQUIRRELVM v)
+{
+    if (v->_isthreadvm)
+        v->Push(v);
+    else
+        sq_pushnull(v);
+    return 1;
+}
+
 static SQInteger base_array(HSQUIRRELVM v)
 {
     SQArray *a;
@@ -755,6 +764,7 @@ static const SQRegFunction base_funcs[]={
     {_SC("compilestring"),base_compilestring,-2, _SC(".ss")},
     {_SC("newthread"),base_newthread,2, _SC(".c")},
     {_SC("suspend"),base_suspend,-1, NULL},
+    {_SC("runningthread"),base_runningthread,1, NULL},
     {_SC("array"),base_array,-2, _SC(".n")},
     {_SC("type"),base_type,2, NULL},
     {_SC("rawstring"),base_rawstring,2, NULL},

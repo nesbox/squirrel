@@ -1,3 +1,4 @@
 ## Changelog
 
-- Added `.toblob` conversion method for `default delegates`.
+- Added `runningthread` function.
+- Fixed unicode support.

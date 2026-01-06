@@ -358,6 +358,7 @@ bool SQVM::Init(SQVM *friendvm, SQInteger stacksize)
     _callsstack = &_callstackdata[0];
     _stackbase = 0;
     _top = 0;
+    _isthreadvm = false;
     if(!friendvm) {
         _roottable = SQTable::Create(_ss(this), 0);
         sq_base_register(this);
@@ -368,6 +369,7 @@ bool SQVM::Init(SQVM *friendvm, SQInteger stacksize)
         _debughook = friendvm->_debughook;
         _debughook_native = friendvm->_debughook_native;
         _debughook_closure = friendvm->_debughook_closure;
+        _isthreadvm = true;
     }
 
 

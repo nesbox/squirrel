@@ -144,6 +144,7 @@ public:
     SQObjectPtr &GetAt(SQInteger n);
 
     SQObjectPtrVec _stack;
+    SQBool _isthreadvm;
 
     SQInteger _top;
     SQInteger _stackbase;
