@@ -2,13 +2,11 @@
 
 desktop.ini
 
-# Visual Studio
+# Project specific local files
 
-/.vs/
-
-# VS Code
-
-/.vscode/
+.vs/
+.vscode/
+.idea/
 
 # Main directory
 
