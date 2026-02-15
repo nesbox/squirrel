@@ -72,6 +72,11 @@ struct SQVM;
 #define TK_CONST 324
 #define TK_RAWCALL 325
 #define TK_CLASSOF 326
+#define TK_TEMPLATE_STRING_START 327
+#define TK_TEMPLATE_STRING_TEXT 328
+#define TK_TEMPLATE_EXPRESSION_START 329
+#define TK_TEMPLATE_EXPRESSION_END 330
+#define TK_TEMPLATE_STRING_END 331
 
 
 typedef void(*CompilerErrorFunc)(void *ud, const SQChar *s);

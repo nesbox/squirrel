@@ -77,7 +77,16 @@ void SQLexer::Init(SQSharedState *ss, SQLEXREADFUNC rg, SQUserPointer up,Compile
     _currentcolumn = 0;
     _prevtoken = -1;
     _reached_eof = SQFalse;
-    Next();
+    _template_lex_state = TLS_NONE;
+    _currdata = SQUIRREL_EOB;
+    _nextdata = SQUIRREL_EOB;
+    Next(); // Populate _currdata
+    Next(); // Populate _nextdata and shift _currdata
+}
+
+LexChar SQLexer::PeekNextChar()
+{
+    return _nextdata;
 }
 
 void SQLexer::Error(const SQChar *err)
@@ -87,13 +96,14 @@ void SQLexer::Error(const SQChar *err)
 
 void SQLexer::Next()
 {
+    _currdata = _nextdata;
     SQInteger t = _readf(_up);
     if(t > MAX_CHAR) Error(_SC("Invalid character"));
     if(t != 0) {
-        _currdata = (LexChar)t;
+        _nextdata = (LexChar)t;
         return;
     }
-    _currdata = SQUIRREL_EOB;
+    _nextdata = SQUIRREL_EOB;
     _reached_eof = SQTrue;
 }
 
@@ -129,6 +139,22 @@ void SQLexer::LexLineComment()
 SQInteger SQLexer::Lex()
 {
     _lasttokenline = _currentline;
+
+    if (_template_lex_state == TLS_IN_EXPRESSION) {
+        SQInteger tok = LexTemplateExpressionContent();
+        if (tok != 0) {
+            RETURN_TOKEN(tok);
+        }
+    }
+
+    if (_template_lex_state == TLS_IN_STRING) {
+        SQInteger tok = LexTemplateStringContent();
+        if (tok != 0) {
+            RETURN_TOKEN(tok);
+        }
+    }
+
+
     while(CUR_CHAR != SQUIRREL_EOB) {
         switch(CUR_CHAR){
         case _SC('\t'): case _SC('\r'): case _SC(' '): NEXT(); continue;
@@ -216,7 +242,25 @@ SQInteger SQLexer::Lex()
             }
             Error(_SC("error parsing the string"));
             }
-        case _SC('{'): case _SC('}'): case _SC('('): case _SC(')'): case _SC('['): case _SC(']'):
+
+
+        case _SC('{'):
+            if (_template_lex_state != TLS_IN_EXPRESSION) {
+                SQInteger ret = CUR_CHAR;
+                NEXT(); RETURN_TOKEN(ret);
+            }
+            break;
+
+        case _SC('`'): {
+            if (_template_lex_state == TLS_NONE) {
+                NEXT();
+                _template_lex_state = TLS_IN_STRING;
+                RETURN_TOKEN(TK_TEMPLATE_STRING_START);
+            }
+            break;
+        }
+
+        case _SC('}'): case _SC('('): case _SC(')'): case _SC('['): case _SC(']'):
         case _SC(';'): case _SC(','): case _SC('?'): case _SC('^'): case _SC('~'):
             {SQInteger ret = CUR_CHAR;
             NEXT(); RETURN_TOKEN(ret); }
@@ -278,6 +322,93 @@ SQInteger SQLexer::Lex()
             }
         }
     }
+    return 0;
+}
+
+SQInteger SQLexer::LexTemplateStringContent()
+{
+    INIT_TEMP_STRING();
+    while (CUR_CHAR != SQUIRREL_EOB) {
+        if (CUR_CHAR == _SC('\n')) {
+            Error(_SC("newline in a constant"));
+            return -1;
+        }
+
+        if (CUR_CHAR == _SC('$') && PeekNextChar() == _SC('{')) {
+            if (_longstr.size() > 0) {
+                TERMINATE_BUFFER();
+                _svalue = _sharedstate->GetScratchPad(_longstr.size());
+                memcpy((void*)_svalue, &_longstr[0], _longstr.size() * sizeof(SQChar));
+                return TK_TEMPLATE_STRING_TEXT;
+            }
+            NEXT(); // consume '$'
+            NEXT(); // consume '{'
+            _template_lex_state = TLS_IN_EXPRESSION;
+            return TK_TEMPLATE_EXPRESSION_START;
+        }
+
+        if (CUR_CHAR == _SC('`')) {
+            if (_longstr.size() > 0) {
+                TERMINATE_BUFFER();
+                _svalue = _sharedstate->GetScratchPad(_longstr.size());
+                memcpy((void*)_svalue, &_longstr[0], _longstr.size() * sizeof(SQChar));
+                return TK_TEMPLATE_STRING_TEXT;
+            }
+            NEXT(); // consume '`'
+            _template_lex_state = TLS_NONE;
+            return TK_TEMPLATE_STRING_END;
+        }
+
+        if (CUR_CHAR == _SC('\\')) {
+            NEXT(); // consume '\'
+            if (CUR_CHAR == SQUIRREL_EOB) {
+                Error(_SC("unfinished template string escape sequence"));
+                return -1;
+            }
+            if (CUR_CHAR == _SC('`')) {
+                APPEND_CHAR(_SC('`'));
+                NEXT();
+            } else if (CUR_CHAR == _SC('$')) {
+                APPEND_CHAR(_SC('$'));
+                NEXT();
+            }
+            else {
+                // For other escape sequences, just append the escaped char for now
+                // A full implementation would handle `\n`, `\t`, `\x`, `\u` etc.
+                // For simplicity, we are handling only '\`' and '\$' as special for now.
+                APPEND_CHAR(CUR_CHAR);
+                NEXT();
+            }
+        }
+        else {
+            if (CUR_CHAR == _SC('\n')) {
+                _currentline++;
+            }
+            APPEND_CHAR(CUR_CHAR);
+            NEXT();
+        }
+    }
+    Error(_SC("unfinished template string"));
+    return -1; // Should not reach here
+}
+
+SQInteger SQLexer::LexTemplateExpressionContent()
+{
+    // This function handles lexing when _template_lex_state is TLS_IN_EXPRESSION
+    // It essentially acts as a passthrough to the main Lex() function until '}' is found.
+
+    if (CUR_CHAR == _SC('}')) {
+        NEXT(); // consume '}'
+        _template_lex_state = TLS_IN_STRING;
+        return TK_TEMPLATE_EXPRESSION_END;
+    }
+    if (IS_EOB()) {
+        Error(_SC("unfinished template expression"));
+        return -1;
+    }
+
+    // Return 0 to indicate that the main Lex() should handle the token
+    // This is a placeholder; the main Lex() will need to be modified to handle this correctly.
     return 0;
 }
 
