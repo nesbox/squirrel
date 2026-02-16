@@ -24,7 +24,7 @@ private:
     void LexLineComment();
     SQInteger ReadID();
     void Next();
-    LexChar PeekNextChar(); // New: Declaration for peek function
+    LexChar PeekNextChar();
 #ifdef SQUNICODE
 #if WCHAR_SIZE == 2
     SQInteger AddUTF16(SQUnsignedInteger ch);
@@ -33,8 +33,9 @@ private:
     SQInteger AddUTF8(SQUnsignedInteger ch);
 #endif
     SQInteger ProcessStringHexEscape(SQChar *dest, SQInteger maxdigits);
-    SQInteger LexTemplateStringContent();   // New: for lexing inside ``
-    SQInteger LexTemplateExpressionContent(); // New: for lexing inside ${}
+    SQInteger AppendEscapedChar();
+    SQInteger LexTemplateStringContent();
+    SQInteger LexTemplateExpressionContent();
     enum TemplateLexState {
         TLS_NONE,
         TLS_IN_STRING,
@@ -54,10 +55,10 @@ public:
     SQLEXREADFUNC _readf;
     SQUserPointer _up;
     LexChar _currdata;
-    LexChar _nextdata; // New member for one-character lookahead
+    LexChar _nextdata;
     SQSharedState *_sharedstate;
     sqvector<SQChar> _longstr;
-    TemplateLexState _template_lex_state; // New member for template string lexing state
+    TemplateLexState _template_lex_state;
     CompilerErrorFunc _errfunc;
     void *_errtarget;
 };
