@@ -13,13 +13,13 @@ using string = std::wstring;
 using regex = std::wregex;
 using cmatch = std::wcmatch;
 
-std::wstring to_string(const char* str) { std::wstring_convert<std::codecvt_utf8<wchar_t>> conv; return conv.from_bytes(str); }
+static std::wstring to_string(const char* str) { std::wstring_convert<std::codecvt_utf8<wchar_t>> conv; return conv.from_bytes(str); }
 #else
 using string = std::string;
 using regex = std::regex;
 using cmatch = std::cmatch;
 
-std::string to_string(const char* str) { return str; }
+static std::string to_string(const char* str) { return str; }
 #endif
 
 using regex_error = std::regex_error;

@@ -5,6 +5,7 @@
 #ifndef NO_COMPILER
 #include <stdarg.h>
 #include <setjmp.h>
+#include <regex>
 #include "sqopcodes.h"
 #include "sqstring.h"
 #include "sqfuncproto.h"
@@ -13,6 +14,18 @@
 #include "sqlexer.h"
 #include "sqvm.h"
 #include "sqtable.h"
+
+#ifdef SQUNICODE
+#include <codecvt>
+
+using string = std::wstring;
+using regex = std::wregex;
+using cregex_iterator = std::wcregex_iterator;
+#else
+using string = std::string;
+using regex = std::regex;
+using cregex_iterator = std::cregex_iterator;
+#endif
 
 #define EXPR   1
 #define OBJECT 2
@@ -112,6 +125,21 @@ public:
                         break;
                     case TK_STRING_LITERAL:
                         etypename = _SC("STRING_LITERAL");
+                        break;
+                    case TK_TEMPLATE_STRING_START:
+                        etypename = _SC("TEMPLATE_STRING_START");
+                        break;
+                    case TK_TEMPLATE_STRING_TEXT:
+                        etypename = _SC("TEMPLATE_STRING_TEXT");
+                        break;
+                    case TK_TEMPLATE_EXPRESSION_START:
+                        etypename = _SC("TEMPLATE_EXPRESSION_START");
+                        break;
+                    case TK_TEMPLATE_EXPRESSION_END:
+                        etypename = _SC("TEMPLATE_EXPRESSION_END");
+                        break;
+                    case TK_TEMPLATE_STRING_END:
+                        etypename = _SC("TEMPLATE_STRING_END");
                         break;
                     case TK_INTEGER:
                         etypename = _SC("INTEGER");
@@ -712,6 +740,7 @@ public:
             }
         }
     }
+
     SQInteger Factor()
     {
         //_es.etype = EXPR;
@@ -721,6 +750,42 @@ public:
             _fs->AddInstruction(_OP_LOAD, _fs->PushTarget(), _fs->GetConstant(_fs->CreateString(_lex._svalue,_lex._longstr.size()-1)));
             Lex();
             break;
+        case TK_TEMPLATE_STRING_START: {
+            Lex();
+            SQInteger total_segments = 0;
+
+            while (_token != TK_TEMPLATE_STRING_END) {
+                if (_token == TK_TEMPLATE_STRING_TEXT) {
+                    _fs->PushTarget();
+                    _fs->AddInstruction(_OP_LOAD, _fs->TopTarget(), _fs->GetConstant(_fs->CreateString(_lex._svalue, _lex._longstr.size()-1)));
+                    Lex();
+                } else if (_token == TK_TEMPLATE_EXPRESSION_START) {
+                    Lex();
+                    INVOKE_EXP(&SQCompiler::Expression);
+                    Expect(TK_TEMPLATE_EXPRESSION_END);
+                } else {
+                    Error(_SC("unexpected token in template string"));
+                }
+                total_segments++;
+            }
+            Lex();
+
+            if (total_segments == 0) {
+                _fs->PushTarget();
+                _fs->AddInstruction(_OP_LOAD, _fs->TopTarget(), _fs->GetConstant(_fs->CreateString(_SC(""), 0)));
+            } else if (total_segments > 1) {
+                for (int i = 0; i < total_segments - 1; ++i) {
+                    SQInteger left_op_reg = _fs->PopTarget();
+                    SQInteger right_op_reg = _fs->PopTarget();
+
+                    _fs->AddInstruction(_OP_ADD, _fs->PushTarget(), left_op_reg, right_op_reg);
+                }
+            }
+
+            _es.etype = EXPR;
+            _es.epos  = _fs->TopTarget();
+            return _es.epos;
+        }
         case TK_BASE:
             Lex();
             _fs->AddInstruction(_OP_GETBASE, _fs->PushTarget());

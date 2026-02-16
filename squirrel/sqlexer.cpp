@@ -77,7 +77,16 @@ void SQLexer::Init(SQSharedState *ss, SQLEXREADFUNC rg, SQUserPointer up,Compile
     _currentcolumn = 0;
     _prevtoken = -1;
     _reached_eof = SQFalse;
-    Next();
+    _template_lex_state = TLS_NONE;
+    _currdata = SQUIRREL_EOB;
+    _nextdata = SQUIRREL_EOB;
+    Next(); // Populate _currdata
+    Next(); // Populate _nextdata and shift _currdata
+}
+
+LexChar SQLexer::PeekNextChar()
+{
+    return _nextdata;
 }
 
 void SQLexer::Error(const SQChar *err)
@@ -87,13 +96,14 @@ void SQLexer::Error(const SQChar *err)
 
 void SQLexer::Next()
 {
+    _currdata = _nextdata;
     SQInteger t = _readf(_up);
     if(t > MAX_CHAR) Error(_SC("Invalid character"));
     if(t != 0) {
-        _currdata = (LexChar)t;
+        _nextdata = (LexChar)t;
         return;
     }
-    _currdata = SQUIRREL_EOB;
+    _nextdata = SQUIRREL_EOB;
     _reached_eof = SQTrue;
 }
 
@@ -129,6 +139,22 @@ void SQLexer::LexLineComment()
 SQInteger SQLexer::Lex()
 {
     _lasttokenline = _currentline;
+
+    if (_template_lex_state == TLS_IN_EXPRESSION) {
+        SQInteger tok = LexTemplateExpressionContent();
+        if (tok != 0) {
+            RETURN_TOKEN(tok);
+        }
+    }
+
+    if (_template_lex_state == TLS_IN_STRING) {
+        SQInteger tok = LexTemplateStringContent();
+        if (tok != 0) {
+            RETURN_TOKEN(tok);
+        }
+    }
+
+
     while(CUR_CHAR != SQUIRREL_EOB) {
         switch(CUR_CHAR){
         case _SC('\t'): case _SC('\r'): case _SC(' '): NEXT(); continue;
@@ -216,7 +242,25 @@ SQInteger SQLexer::Lex()
             }
             Error(_SC("error parsing the string"));
             }
-        case _SC('{'): case _SC('}'): case _SC('('): case _SC(')'): case _SC('['): case _SC(']'):
+
+
+        case _SC('{'):
+            if (_template_lex_state != TLS_IN_EXPRESSION) {
+                SQInteger ret = CUR_CHAR;
+                NEXT(); RETURN_TOKEN(ret);
+            }
+            break;
+
+        case _SC('`'): {
+            if (_template_lex_state == TLS_NONE) {
+                NEXT();
+                _template_lex_state = TLS_IN_STRING;
+                RETURN_TOKEN(TK_TEMPLATE_STRING_START);
+            }
+            break;
+        }
+
+        case _SC('}'): case _SC('('): case _SC(')'): case _SC('['): case _SC(']'):
         case _SC(';'): case _SC(','): case _SC('?'): case _SC('^'): case _SC('~'):
             {SQInteger ret = CUR_CHAR;
             NEXT(); RETURN_TOKEN(ret); }
@@ -277,6 +321,130 @@ SQInteger SQLexer::Lex()
                 RETURN_TOKEN(0);
             }
         }
+    }
+    return 0;
+}
+
+SQInteger SQLexer::LexTemplateStringContent()
+{
+    INIT_TEMP_STRING();
+    while (CUR_CHAR != SQUIRREL_EOB) {
+        if (CUR_CHAR == _SC('\n')) {
+            Error(_SC("newline in a constant"));
+            return -1;
+        }
+
+        if (CUR_CHAR == _SC('$') && PeekNextChar() == _SC('{')) {
+            if (_longstr.size() > 0) {
+                TERMINATE_BUFFER();
+                _svalue = _sharedstate->GetScratchPad(_longstr.size());
+                memcpy((void*)_svalue, &_longstr[0], _longstr.size() * sizeof(SQChar));
+                return TK_TEMPLATE_STRING_TEXT;
+            }
+            NEXT(); // consume '$'
+            NEXT(); // consume '{'
+            _template_lex_state = TLS_IN_EXPRESSION;
+            return TK_TEMPLATE_EXPRESSION_START;
+        }
+
+        if (CUR_CHAR == _SC('`')) {
+            if (_longstr.size() > 0) {
+                TERMINATE_BUFFER();
+                _svalue = _sharedstate->GetScratchPad(_longstr.size());
+                memcpy((void*)_svalue, &_longstr[0], _longstr.size() * sizeof(SQChar));
+                return TK_TEMPLATE_STRING_TEXT;
+            }
+            NEXT(); // consume '`'
+            _template_lex_state = TLS_NONE;
+            return TK_TEMPLATE_STRING_END;
+        }
+
+        if (CUR_CHAR == _SC('\\')) {
+            NEXT(); // consume '\'
+            if (CUR_CHAR == SQUIRREL_EOB) {
+                Error(_SC("unfinished template string escape sequence"));
+                return -1;
+            }
+
+            if (CUR_CHAR == _SC('`')) {
+                APPEND_CHAR(_SC('`'));
+                NEXT();
+            } else if (CUR_CHAR == _SC('$')) {
+                APPEND_CHAR(_SC('$'));
+                NEXT();
+            } else if (AppendEscapedChar() == -1) {
+                return -1;
+            }
+        }
+        else {
+            if (CUR_CHAR == _SC('\n')) {
+                _currentline++;
+            }
+            APPEND_CHAR(CUR_CHAR);
+            NEXT();
+        }
+    }
+    Error(_SC("unfinished template string"));
+    return -1;
+}
+
+SQInteger SQLexer::LexTemplateExpressionContent()
+{
+    if (CUR_CHAR == _SC('}')) {
+        NEXT(); // consume '}'
+        _template_lex_state = TLS_IN_STRING;
+        return TK_TEMPLATE_EXPRESSION_END;
+    }
+    if (IS_EOB()) {
+        Error(_SC("unfinished template expression"));
+        return -1;
+    }
+
+    return 0;
+}
+
+SQInteger SQLexer::AppendEscapedChar()
+{
+    switch(CUR_CHAR) {
+        case _SC('x'):  {
+            const SQInteger maxdigits = sizeof(SQChar) * 2;
+            SQChar temp[maxdigits + 1];
+            ProcessStringHexEscape(temp, maxdigits);
+            SQChar *stemp;
+            APPEND_CHAR((SQChar)scstrtoul(temp, &stemp, 16));
+        }
+        break;
+        case _SC('U'):
+        case _SC('u'):  {
+            const SQInteger maxdigits = CUR_CHAR == 'u' ? 4 : 8;
+            SQChar temp[8 + 1];
+            ProcessStringHexEscape(temp, maxdigits);
+            SQChar *stemp;
+#ifdef SQUNICODE
+#if WCHAR_SIZE == 2
+            AddUTF16(scstrtoul(temp, &stemp, 16));
+#else
+            APPEND_CHAR((SQChar)scstrtoul(temp, &stemp, 16));
+#endif
+#else
+            AddUTF8(scstrtoul(temp, &stemp, 16));
+#endif
+        }
+        break;
+        case _SC('t'): APPEND_CHAR(_SC('\t')); NEXT(); break;
+        case _SC('a'): APPEND_CHAR(_SC('\a')); NEXT(); break;
+        case _SC('b'): APPEND_CHAR(_SC('\b')); NEXT(); break;
+        case _SC('n'): APPEND_CHAR(_SC('\n')); NEXT(); break;
+        case _SC('r'): APPEND_CHAR(_SC('\r')); NEXT(); break;
+        case _SC('v'): APPEND_CHAR(_SC('\v')); NEXT(); break;
+        case _SC('f'): APPEND_CHAR(_SC('\f')); NEXT(); break;
+        case _SC('0'): APPEND_CHAR(_SC('\0')); NEXT(); break;
+        case _SC('\\'): APPEND_CHAR(_SC('\\')); NEXT(); break;
+        case _SC('"'): APPEND_CHAR(_SC('"')); NEXT(); break;
+        case _SC('\''): APPEND_CHAR(_SC('\'')); NEXT(); break;
+        default:
+            Error(_SC("unrecognised escaper char"));
+            return -1;
     }
     return 0;
 }
@@ -373,47 +541,7 @@ SQInteger SQLexer::ReadString(SQInteger ndelim,bool verbatim)
                 }
                 else {
                     NEXT();
-                    switch(CUR_CHAR) {
-                    case _SC('x'):  {
-                        const SQInteger maxdigits = sizeof(SQChar) * 2;
-                        SQChar temp[maxdigits + 1];
-                        ProcessStringHexEscape(temp, maxdigits);
-                        SQChar *stemp;
-                        APPEND_CHAR((SQChar)scstrtoul(temp, &stemp, 16));
-                    }
-                    break;
-                    case _SC('U'):
-                    case _SC('u'):  {
-                        const SQInteger maxdigits = CUR_CHAR == 'u' ? 4 : 8;
-                        SQChar temp[8 + 1];
-                        ProcessStringHexEscape(temp, maxdigits);
-                        SQChar *stemp;
-#ifdef SQUNICODE
-#if WCHAR_SIZE == 2
-                        AddUTF16(scstrtoul(temp, &stemp, 16));
-#else
-                        APPEND_CHAR((SQChar)scstrtoul(temp, &stemp, 16));
-#endif
-#else
-                        AddUTF8(scstrtoul(temp, &stemp, 16));
-#endif
-                    }
-                    break;
-                    case _SC('t'): APPEND_CHAR(_SC('\t')); NEXT(); break;
-                    case _SC('a'): APPEND_CHAR(_SC('\a')); NEXT(); break;
-                    case _SC('b'): APPEND_CHAR(_SC('\b')); NEXT(); break;
-                    case _SC('n'): APPEND_CHAR(_SC('\n')); NEXT(); break;
-                    case _SC('r'): APPEND_CHAR(_SC('\r')); NEXT(); break;
-                    case _SC('v'): APPEND_CHAR(_SC('\v')); NEXT(); break;
-                    case _SC('f'): APPEND_CHAR(_SC('\f')); NEXT(); break;
-                    case _SC('0'): APPEND_CHAR(_SC('\0')); NEXT(); break;
-                    case _SC('\\'): APPEND_CHAR(_SC('\\')); NEXT(); break;
-                    case _SC('"'): APPEND_CHAR(_SC('"')); NEXT(); break;
-                    case _SC('\''): APPEND_CHAR(_SC('\'')); NEXT(); break;
-                    default:
-                        Error(_SC("unrecognised escaper char"));
-                    break;
-                    }
+                    if (AppendEscapedChar() == -1) return -1; // Handle escape sequence
                 }
                 break;
             default:
