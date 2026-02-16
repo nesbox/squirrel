@@ -103,6 +103,7 @@
             [/"(\\x[0-9A-Fa-f]{1,2})/, 'string.escape'],
 
 			      [/@"/, { token: 'string.verbatim', next: '@verbatimString' }],
+            [/`/, { token: 'string.template', next: '@templateString' }],
 
 			      [/\/\*/, { token: 'comment', next: '@comment' }],
             [/\/\/.*/, 'comment'],
@@ -117,6 +118,28 @@
 			    [/""/, 'string.verbatim'],
 			    [/"/, { token: 'string.verbatim', next: '@pop' }]
 		    ],
+
+        templateString: [
+            [/\$\{/, { token: 'delimiter.bracket', next: '@templateExpression' }],
+            [/\\[`$]/, 'string.escape'],
+            [/`/, { token: 'string.template', next: '@pop' }],
+            [/[^\\`$]+/, 'string.template'],
+            [/\\./, 'string.escape'],
+        ],
+
+        templateExpression: [
+          [/\}/, { token: 'delimiter.bracket', next: '@pop' }],
+          [/\b0x[0-9A-Fa-f]+\b/, 'number.hexadecimal'],
+          [/\b0[0-7]+\b/, 'number.octal'],
+          [/\d+/, 'number'],
+          [/\b\d+\.\d+([eE][+-]?\d+)?\b/, 'number.float'],
+          [/"([^"\\]|\\.)*"/, 'string'],
+          [/'([^'\\]|\\.)*'/, 'string'],
+          [/[a-zA-Z_$][\w$]*/, 'identifier'],
+          [/[-+*/%=!<>|&]+/, 'operator'],
+          [/[()[\]]/, '@brackets'],
+          [/\s+/, 'white'],
+        ],
 
 		    comment: [
 			    [/[^\*]+/, 'comment'],

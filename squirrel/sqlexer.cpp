@@ -390,6 +390,10 @@ SQInteger SQLexer::LexTemplateStringContent()
 
 SQInteger SQLexer::LexTemplateExpressionContent()
 {
+    while (scisspace(CUR_CHAR)) {
+        NEXT();
+    }
+
     if (CUR_CHAR == _SC('}')) {
         NEXT(); // consume '}'
         _template_lex_state = TLS_IN_STRING;
