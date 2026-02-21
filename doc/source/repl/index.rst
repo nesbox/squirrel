@@ -11,16 +11,38 @@
     {
       display: flex;
       margin-bottom: 12px;
+      gap: 12px;
     }
 
-    #btn-run
+    #btn-run, #btn-copy-link
+    {
+      margin-left: 0;
+    }
+
+    #btn-copy-link
     {
       margin-left: auto;
+    }
+
+    #btn-run, #btn-copy-link
+    {
+      padding: 6px 12px;
+      border-radius: 6px;
+      background-color: #eee;
+      border: 1px solid #ddd;
+      cursor: pointer;
+    }
+
+    #btn-run:hover, #btn-copy-link:hover
+    {
+      background-color: #ddd;
     }
 
     #script
     {
       min-height: 450px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
     }
 
     #output
@@ -30,6 +52,9 @@
       font-size: 14px;
       resize: none;
       cursor: default;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 6px;
     }
   </style>
 
@@ -170,7 +195,7 @@
 
       codeEditor = monaco.editor.create(document.getElementById("script"),
       {
-        value: `print("Hello from " + _version_)`,
+        value: getCodeFromUrl() ?? `print("Hello from " + _version_)`,
         language: 'squirrel',
         theme: 'vs-light'
       });
@@ -199,6 +224,29 @@
       free_cpp_string(code_cpp_text);
     }
 
+    function getCodeFromUrl()
+    {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get("code");
+
+      if (code)
+      {
+        return window.atob(code);
+      }
+
+      return null;
+    }
+
+    function copy_data_url()
+    {
+      const code = codeEditor.getValue();
+      const encodedCode = window.btoa(code);
+      const url = new URL(window.location);
+
+      url.searchParams.set("code", encodedCode);
+      navigator.clipboard.writeText(url.toString());
+    }
+
     document.addEventListener("keyup", function(e)
     {
       if (e.key === "Enter" && e.altKey)
@@ -206,14 +254,20 @@
         execute_sq()
         e.preventDefault()
       }
+      else if (e.key === "c" && e.altKey)
+      {
+        copy_data_url()
+        e.preventDefault()
+      }
     })
   </script>
 
-  <div class="content-wrapper">
-    Source code
+    <div class="content-wrapper">
+      Source code
 
-    <button id="btn-run" onclick="execute_sq()">Run (Alt + Enter)</button>
-  </div>
+      <button id="btn-copy-link" onclick="copy_data_url()">Copy link (Alt + C)</button>
+      <button id="btn-run" onclick="execute_sq()">Run (Alt + Enter)</button>
+    </div>
 
   <div id="script">
   </div>
