@@ -254,18 +254,13 @@
         execute_sq()
         e.preventDefault()
       }
-      else if (e.key.toLowerCase() === "c" && e.altKey && e.shiftKey)
-      {
-        copy_data_url()
-        e.preventDefault()
-      }
     })
   </script>
 
     <div class="content-wrapper">
       Source code
 
-      <button id="btn-copy-link" onclick="copy_data_url()">Copy link (Alt + Shift + C)</button>
+      <button id="btn-copy-link" onclick="copy_data_url()">Copy link</button>
       <button id="btn-run" onclick="execute_sq()">Run (Alt + Enter)</button>
     </div>
 
