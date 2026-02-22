@@ -11,7 +11,6 @@ stages:
 
 .build:
   stage: build
-  when: manual
   script:
     - cmake . --preset ${SYSTEM}-${ARCHITECTURE}-Release
     - cmake --build --preset ${SYSTEM}-${ARCHITECTURE}-Release
@@ -74,7 +73,6 @@ build:linux:
 build:wasm:
   stage: build
   image: emscripten/emsdk:latest
-  when: manual
   script:
     - apt-get update
     - apt-get install -y ninja-build
