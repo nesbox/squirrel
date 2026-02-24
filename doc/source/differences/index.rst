@@ -47,6 +47,8 @@ New functionality
 - **blob.read** method
 - **blob.write** method
 - **blob.tostring** method
+- **function.vcall** method
+- **function.pvcall** method
 - **thread.acall** method
 - **regexp.captureall** method
 - **.toblob** conversion method for **default delegates** which converts the string represenation to **blob** instance

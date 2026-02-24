@@ -579,6 +579,14 @@ calls the function with the specified environment object('this') and parameters.
 
 calls the function with the specified environment object('this') and parameters. The function accepts an array containing the parameters that will be passed to the called function.Where array_args has to contain the required 'this' object at the [0] position. This function will not invoke the error callback in case of failure(pacall stays for 'protected array call')
 
+.. js:function:: function.vcall(_this, array_args)
+
+calls the function with the specified environment object('this') and parameters. The function accepts an array containing the parameters that will be passed to the called function.
+
+.. js:function:: function.vcall(_this, array_args)
+
+calls the function with the specified environment object('this') and parameters. The function accepts an array containing the parameters that will be passed to the called function. This function will not invoke the error callback in case of failure(vcall stays for 'protected variadic call')
+
 
 .. js:function:: function.weakref()
 

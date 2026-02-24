@@ -1538,6 +1538,26 @@ static SQInteger closure_pacall(HSQUIRRELVM v)
     return _closure_acall(v,SQFalse);
 }
 
+static SQInteger _closure_vcall(HSQUIRRELVM v,SQBool raiseerror)
+{
+    SQArray *aparams=_array(stack_get(v,3));
+    SQInteger nparams=aparams->Size();
+    v->Push(stack_get(v,1));
+    v->Push(stack_get(v,2));
+    for(SQInteger i=0;i<nparams;i++)v->Push(aparams->_values[i]);
+    return SQ_SUCCEEDED(sq_call(v,nparams + 1,SQTrue,raiseerror))?1:SQ_ERROR;
+}
+
+static SQInteger closure_vcall(HSQUIRRELVM v)
+{
+    return _closure_vcall(v,SQTrue);
+}
+
+static SQInteger closure_pvcall(HSQUIRRELVM v)
+{
+    return _closure_vcall(v,SQFalse);
+}
+
 static SQInteger closure_bindenv(HSQUIRRELVM v)
 {
     if(SQ_FAILED(sq_bindenv(v,1)))
@@ -1609,6 +1629,8 @@ const SQRegFunction SQSharedState::_closure_default_delegate_funcz[]={
     {_SC("pcall"),closure_pcall,-1, _SC("c")},
     {_SC("acall"),closure_acall,2, _SC("ca")},
     {_SC("pacall"),closure_pacall,2, _SC("ca")},
+    {_SC("vcall"),closure_vcall,3, _SC("c.a")},
+    {_SC("pvcall"),closure_pvcall,3, _SC("c.a")},
     {_SC("weakref"),obj_delegate_weakref,1, NULL },
     {_SC("tostring"),default_delegate_tostring,1, _SC(".")},
     {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
