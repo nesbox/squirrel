@@ -4,7 +4,7 @@
   Fork Differences
 #################################
 
-Copyright (c) 2024 Gothic 2 Online Team
+Copyright (c) 2026 Gothic 2 Online Team
 
 Gothic 2 Online modification uses modified Squirrel version with some new features
 and changes added to it. The original language did lack some functionallity, hence
