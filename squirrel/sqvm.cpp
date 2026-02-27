@@ -393,7 +393,9 @@ bool SQVM::StartCall(SQClosure *closure,SQInteger target,SQInteger args,SQIntege
             return false;
         }
 
-        //dumpstack(stackbase);
+#ifdef _DEBUG_DUMP
+        dumpstack(stackbase);
+#endif
         SQInteger nvargs = nargs - paramssize;
         SQArray *arr = SQArray::Create(_ss(this),nvargs);
         SQInteger pbase = stackbase+paramssize;
@@ -404,7 +406,11 @@ bool SQVM::StartCall(SQClosure *closure,SQInteger target,SQInteger args,SQIntege
 
         }
         _stack._vals[stackbase+paramssize] = arr;
-        //dumpstack(stackbase);
+
+#ifdef _DEBUG_DUMP
+        dumpstack(stackbase);
+#endif
+
     }
     else if (paramssize != nargs) {
         SQInteger ndef = func->_ndefaultparams;
@@ -738,8 +744,12 @@ exception_restore:
         for(;;)
         {
             const SQInstruction &_i_ = *ci->_ip++;
-            //dumpstack(_stackbase);
-            //scprintf("\n[%d] %s %d %d %d %d\n",ci->_ip-_closure(ci->_closure)->_function->_instructions,g_InstrDesc[_i_.op].name,arg0,arg1,arg2,arg3);
+
+#ifdef _DEBUG_DUMP
+            dumpstack(stackbase);
+            scprintf("\n[%d] %s %d %d %d %d\n",ci->_ip-_closure(ci->_closure)->_function->_instructions,g_InstrDesc[_i_.op].name,arg0,arg1,arg2,arg3);
+#endif
+
             switch(_i_.op)
             {
             case _OP_LINE: if (_debughook) CallDebugHook(_SC('l'),arg1); continue;
