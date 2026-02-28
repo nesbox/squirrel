@@ -1005,7 +1005,7 @@ exception_restore:
             case _OP_EXISTS: TARGET = Get(STK(arg1), STK(arg2), temp_reg, GET_FLAG_DO_NOT_RAISE_ERROR, DONT_FALL_BACK) ? true : false; continue;
                 
             case _OP_CLASSOF:
-                if(sq_type(STK(arg1)) != OT_CLASS && sq_type(STK(arg2)) != OT_CLASS)
+                if(sq_type(STK(arg1)) != OT_CLASS || sq_type(STK(arg2)) != OT_CLASS)
                 {Raise_Error(_SC("cannot apply classof between a %s and a %s"),GetTypeName(STK(arg1)),GetTypeName(STK(arg2))); SQ_THROW();}
                 TARGET = _class(STK(arg1))->ClassOf(_class(STK(arg2)));
                 continue;
