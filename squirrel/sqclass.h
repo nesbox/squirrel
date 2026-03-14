@@ -84,12 +84,14 @@ public:
 #endif
     SQInteger Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
     SQInstance *CreateInstance();
+    const SQChar* getName();
     SQTable *_members;
     SQClass *_base;
     SQClassMemberVec _defaultvalues;
     SQClassMemberVec _methods;
     SQObjectPtr _metamethods[MT_LAST];
     SQObjectPtr _attributes;
+    SQObjectPtr _name;
     SQUserPointer _typetag;
     SQRELEASEHOOK _hook;
     bool _locked;

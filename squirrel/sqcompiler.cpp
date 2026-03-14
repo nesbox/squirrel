@@ -1122,7 +1122,7 @@ public:
             Lex();
             varname = Expect(TK_IDENTIFIER);
 
-            ClassExp();
+            ClassExp(varname);
 
             _fs->PopTarget();
             _fs->PushLocalVariable(varname);
@@ -1136,6 +1136,7 @@ public:
                 SQInteger src = _fs->PopTarget();
                 SQInteger dest = _fs->PushTarget();
                 if(dest != src) _fs->AddInstruction(_OP_MOVE, dest, src);
+                _fs->AddInstruction(_OP_SETCLASSNAME, dest, _fs->GetConstant(varname));
             }
             else{
                 _fs->AddInstruction(_OP_LOADNULLS, _fs->PushTarget(),1);
@@ -1549,7 +1550,7 @@ public:
         CreateFunction(dummy, boundtarget, lambda);
         _fs->AddInstruction(_OP_CLOSURE, _fs->PushTarget(), _fs->_functions.size() - 1, boundtarget);
     }
-    void ClassExp()
+    void ClassExp(const SQObjectPtr &name = SQObjectPtr())
     {
         SQInteger base = -1;
         SQInteger attrs = -1;
@@ -1567,6 +1568,9 @@ public:
         if(attrs != -1) _fs->PopTarget();
         if(base != -1) _fs->PopTarget();
         _fs->AddInstruction(_OP_NEWOBJ, _fs->PushTarget(), base, attrs,NOT_CLASS);
+        if (sq_isstring(name)) {
+            _fs->AddInstruction(_OP_SETCLASSNAME, _fs->TopTarget(), _fs->GetConstant(name));
+        }
         ParseTableOrClass(_SC(';'),_SC('}'));
     }
     void DeleteExpr()

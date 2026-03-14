@@ -1009,6 +1009,11 @@ exception_restore:
                 {Raise_Error(_SC("cannot apply classof between a %s and a %s"),GetTypeName(STK(arg1)),GetTypeName(STK(arg2))); SQ_THROW();}
                 TARGET = _class(STK(arg1))->ClassOf(_class(STK(arg2)));
                 continue;
+            case _OP_SETCLASSNAME:
+                if(sq_isclass(STK(arg0))) {
+                    _class(STK(arg0))->_name = ci->_literals[arg1];
+                }
+                continue;
             case _OP_INSTANCEOF:
                 if(sq_type(STK(arg1)) != OT_CLASS)
                 {Raise_Error(_SC("cannot apply instanceof between a %s and a %s"),GetTypeName(STK(arg1)),GetTypeName(STK(arg2))); SQ_THROW();}
@@ -1393,7 +1398,15 @@ bool SQVM::Set(const SQObjectPtr &self,const SQObjectPtr &key,const SQObjectPtr 
 {
     switch(sq_type(self)){
     case OT_TABLE:
-        if(_table(self)->Set(key,val)) return true;
+        if(_table(self)->Set(key,val)) {
+            if (sq_isclass(val) && sq_isstring(key)) {
+                SQClass *cls = _class(val);
+                if (sq_isnull(cls->_name)) {
+                    cls->_name = key;
+                }
+            }
+            return true;
+        }
         break;
     case OT_INSTANCE:
         if(_instance(self)->Set(key,val)) return true;
@@ -1537,6 +1550,12 @@ bool SQVM::NewSlot(const SQObjectPtr &self,const SQObjectPtr &key,const SQObject
         }
         if(rawcall) _table(self)->NewSlot(key,val); //cannot fail
 
+        if (sq_isclass(val) && sq_isstring(key)) {
+            SQClass *cls = _class(val);
+            if (sq_isnull(cls->_name)) {
+                cls->_name = key;
+            }
+        }
         break;}
     case OT_INSTANCE: {
         SQObjectPtr res;

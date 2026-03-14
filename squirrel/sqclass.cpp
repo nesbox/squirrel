@@ -26,6 +26,7 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
         _defaultvalues.copy(base->_defaultvalues);
         _methods.copy(base->_methods);
         _COPY_VECTOR(_metamethods,base->_metamethods,MT_LAST);
+        _name = base->_name;
         __ObjAddRef(_base);
     }
     _members = base?base->_members->Clone() : SQTable::Create(ss,0);
@@ -37,6 +38,7 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
 
 void SQClass::Finalize() {
     _attributes.Null();
+    _name.Null();
     _NULL_SQOBJECT_VECTOR(_defaultvalues,_defaultvalues.size());
     _methods.resize(0);
     _NULL_SQOBJECT_VECTOR(_metamethods,MT_LAST);
@@ -50,6 +52,14 @@ SQClass::~SQClass()
 {
     REMOVE_FROM_CHAIN(&_sharedstate->_gc_chain, this);
     Finalize();
+}
+
+const SQChar* SQClass::getName()
+{
+    if (sq_isstring(_name)) {
+        return _stringval(_name);
+    }
+    return _SC("");
 }
 
 bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr &val,bool bstatic)

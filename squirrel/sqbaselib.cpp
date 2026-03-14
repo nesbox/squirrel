@@ -1864,6 +1864,13 @@ static SQInteger class_getbase(HSQUIRRELVM v)
     return SQ_SUCCEEDED(sq_getbase(v,-1))?1:SQ_ERROR;
 }
 
+static SQInteger class_getname(HSQUIRRELVM v)
+{
+    SQObjectPtr& o = stack_get(v, 1);
+    v->Push(SQString::Create(_ss(v), _class(o)->getName(), -1));
+    return 1;
+}
+
 static SQInteger class_newmember(HSQUIRRELVM v)
 {
     SQInteger top = sq_gettop(v);
@@ -1907,6 +1914,7 @@ const SQRegFunction SQSharedState::_class_default_delegate_funcz[] = {
     {_SC("toblob"),default_delegate_toblob,1, _SC(".")},
     {_SC("instance"),class_instance,1, _SC("y")},
     {_SC("getbase"),class_getbase,1, _SC("y")},
+    {_SC("getname"),class_getname,1, _SC("y")},
     {_SC("newmember"),class_newmember,-3, _SC("y")},
     {_SC("rawnewmember"),class_rawnewmember,-3, _SC("y")},
     {NULL,(SQFUNCTION)0,0,NULL}
