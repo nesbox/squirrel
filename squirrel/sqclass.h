@@ -58,14 +58,6 @@ public:
         }
         return false;
     }
-    bool GetDestructor(SQObjectPtr &dtor)
-    {
-        if(_destructoridx != -1) {
-            dtor = _methods[_destructoridx].val;
-            return true;
-        }
-        return false;
-    }
     bool SetAttributes(const SQObjectPtr &key,const SQObjectPtr &val);
     bool GetAttributes(const SQObjectPtr &key,SQObjectPtr &outval);
     bool ClassOf(SQClass *trg);
@@ -94,7 +86,6 @@ public:
     SQRELEASEHOOK _hook;
     bool _locked;
     SQInteger _constructoridx;
-    SQInteger _destructoridx;
     SQInteger _udsize;
 };
 

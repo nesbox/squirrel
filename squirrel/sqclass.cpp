@@ -18,10 +18,8 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
     _udsize = 0;
     _locked = false;
     _constructoridx = -1;
-    _destructoridx = -1;
     if(_base) {
         _constructoridx = _base->_constructoridx;
-        _destructoridx = _base->_destructoridx;
         _udsize = _base->_udsize;
         _defaultvalues.copy(base->_defaultvalues);
         _methods.copy(base->_methods);
