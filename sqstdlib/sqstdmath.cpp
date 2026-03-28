@@ -322,8 +322,8 @@ SINGLE_ARG_FUNC(exp)
 
 #define _DECL_FUNC(name,nparams,tycheck) {_SC(#name),math_##name,nparams,tycheck}
 static const SQRegFunction mathlib_funcs[] = {
-	_DECL_FUNC(min,-2,_SC(".n")),
-	_DECL_FUNC(max,-2,_SC(".n")),
+	_DECL_FUNC(min,-2,_SC("..")),
+	_DECL_FUNC(max,-2,_SC("..")),
 	_DECL_FUNC(sign, 2,_SC(".n")),
 	_DECL_FUNC(clamp, 4,_SC(".nnn")),
 	_DECL_FUNC(lerp, 4,_SC(".nnn")),
