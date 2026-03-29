@@ -195,7 +195,7 @@
 
       codeEditor = monaco.editor.create(document.getElementById("script"),
       {
-        value: getCodeFromUrl() ?? `print("Hello from " + _version_)`,
+        value: getCodeFromUrl() ?? "print(`Hello from ${_version_}`)",
         language: 'squirrel',
         theme: 'vs-light'
       });
