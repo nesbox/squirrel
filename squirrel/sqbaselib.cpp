@@ -17,6 +17,8 @@
 #include <string>
 #include <stack>
 #include <unordered_set>
+#include <vector>
+#include <algorithm>
 
 #ifdef SQUNICODE
 using string = std::wstring;
@@ -455,6 +457,42 @@ static SQInteger base_resurectureachable(HSQUIRRELVM v)
     sq_resurrectunreachable(v);
     return 1;
 }
+
+static SQInteger base_getminsizecontainers(HSQUIRRELVM v)
+{
+    SQInteger minsize;
+    if(SQ_FAILED(sq_getinteger(v, 2, &minsize))) return sq_throwerror(v, _SC("invalid parameter"));
+
+    SQCollectable *t = _ss(v)->_gc_chain;
+    std::vector<std::pair<SQInteger, SQObjectPtr>> containers;
+
+    while(t) {
+        SQObjectType type = t->GetType();
+        if(type == OT_TABLE || type == OT_ARRAY) {
+            SQInteger size = (type == OT_TABLE) ? ((SQTable*)t)->CountUsed() : ((SQArray*)t)->Size();
+            if(size >= minsize) {
+                SQObjectPtr obj;
+                if(type == OT_TABLE) obj = (SQTable*)t;
+                else obj = (SQArray*)t;
+                containers.push_back({size, obj});
+            }
+        }
+        t = t->_next;
+    }
+
+    std::sort(containers.begin(), containers.end(), [](const std::pair<SQInteger, SQObjectPtr>& a, const std::pair<SQInteger, SQObjectPtr>& b) {
+        return a.first > b.first;
+    });
+
+    SQObjectPtr res_array_obj = SQArray::Create(_ss(v), 0);
+    SQArray *res_array = _array(res_array_obj);
+    for(const auto& item : containers) {
+        res_array->Append(item.second);
+    }
+
+    v->Push(res_array_obj);
+    return 1;
+}
 #endif
 
 static SQInteger base_getroottable(HSQUIRRELVM v)
@@ -775,6 +813,7 @@ static const SQRegFunction base_funcs[]={
 #ifndef NO_GARBAGE_COLLECTOR
     {_SC("collectgarbage"),base_collectgarbage,0, NULL},
     {_SC("resurrectunreachable"),base_resurectureachable,0, NULL},
+    {_SC("getminsizecontainers"),base_getminsizecontainers,2, _SC(".n")},
 #endif
     {NULL,(SQFUNCTION)0,0,NULL}
 };
