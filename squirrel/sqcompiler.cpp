@@ -402,7 +402,7 @@ public:
         _es.etype     = EXPR;
         _es.epos      = -1;
         _es.donot_get = false;
-        LogicalOrExp();
+        NullCoalesceExp();
         switch(_token)  {
         case _SC('='):
         case TK_NEWSLOT:
@@ -495,6 +495,25 @@ public:
         SQInteger op1 = _fs->PopTarget();SQInteger op2 = _fs->PopTarget();
         _fs->AddInstruction(op, _fs->PushTarget(), op1, op2, op3);
         _es.etype = EXPR;
+    }
+    void NullCoalesceExp()
+    {
+        LogicalOrExp();
+        for(;;) if(_token == TK_NULLCOALESCE) {
+            SQInteger first_exp = _fs->PopTarget();
+            SQInteger trg = _fs->PushTarget();
+            _fs->AddInstruction(_OP_NULLCOALESCE, trg, 0, first_exp, 0);
+            SQInteger jpos = _fs->GetCurrentPos();
+            if(trg != first_exp) _fs->AddInstruction(_OP_MOVE, trg, first_exp);
+            Lex(); INVOKE_EXP(&SQCompiler::NullCoalesceExp);
+            _fs->SnoozeOpt();
+            SQInteger second_exp = _fs->PopTarget();
+            if(trg != second_exp) _fs->AddInstruction(_OP_MOVE, trg, second_exp);
+            _fs->SnoozeOpt();
+            _fs->SetInstructionParam(jpos, 1, (_fs->GetCurrentPos() - jpos));
+            _es.etype = EXPR;
+            break;
+        }else return;
     }
     void LogicalOrExp()
     {
@@ -643,8 +662,34 @@ public:
     void PrefixedExpr()
     {
         SQInteger pos = Factor();
-        for(;;) {
+        sqvector<SQInteger> null_jumps;
+        bool done = false;
+        while(!done) {
             switch(_token) {
+            case TK_OPT_DOT:
+                pos = -1;
+                Lex();
+                
+                // Check if the object is null. If NOT null, skip the jump-to-end.
+                _fs->AddInstruction(_OP_NULLCOALESCE, _fs->TopTarget(), 1, _fs->TopTarget(), 0);
+                _fs->AddInstruction(_OP_JMP, 0, 0);
+                null_jumps.push_back(_fs->GetCurrentPos());
+                
+                // Load the key
+                _fs->AddInstruction(_OP_LOAD, _fs->PushTarget(), _fs->GetConstant(Expect(TK_IDENTIFIER)));
+                
+                // Check if key exists
+                {
+                    SQInteger key = _fs->TopTarget();
+                    SQInteger obj = _fs->GetUpTarget(1);
+                    _fs->AddInstruction(_OP_EXISTS, _fs->PushTarget(), obj, key);
+                    _fs->AddInstruction(_OP_JZ, _fs->PopTarget(), 0);
+                    null_jumps.push_back(_fs->GetCurrentPos());
+                }
+
+                if(NeedGet()) Emit2ArgsOP(_OP_GET);
+                _es.etype = OBJECT;
+                break;
             case _SC('.'):
                 pos = -1;
                 Lex();
@@ -662,6 +707,29 @@ public:
                     }
                     _es.etype = OBJECT;
                 }
+                break;
+            case TK_OPT_BRACKET:
+                pos = -1;
+                Lex();
+                
+                // Check if the object is null. If NOT null, skip the jump-to-end.
+                _fs->AddInstruction(_OP_NULLCOALESCE, _fs->TopTarget(), 1, _fs->TopTarget(), 0);
+                _fs->AddInstruction(_OP_JMP, 0, 0);
+                null_jumps.push_back(_fs->GetCurrentPos());
+                
+                Expression(); Expect(_SC(']'));
+
+                // Check if key exists
+                {
+                    SQInteger key = _fs->TopTarget();
+                    SQInteger obj = _fs->GetUpTarget(1);
+                    _fs->AddInstruction(_OP_EXISTS, _fs->PushTarget(), obj, key);
+                    _fs->AddInstruction(_OP_JZ, _fs->PopTarget(), 0);
+                    null_jumps.push_back(_fs->GetCurrentPos());
+                }
+
+                if(NeedGet()) Emit2ArgsOP(_OP_GET);
+                _es.etype = OBJECT;
                 break;
             case _SC('['):
                 if(_lex._prevtoken == _SC('\n')) Error(_SC("cannot break deref/or comma needed after [exp]=exp slot declaration"));
@@ -683,7 +751,8 @@ public:
             case TK_MINUSMINUS:
             case TK_PLUSPLUS:
                 {
-                    if(IsEndOfStatement()) return;
+                    if(null_jumps.size() > 0) Error(_SC("optional chaining cannot be used with mutating operators"));
+                    if(IsEndOfStatement()) { done = true; break; }
                     SQInteger diff = (_token==TK_MINUSMINUS) ? -1 : 1;
                     Lex();
                     switch(_es.etype)
@@ -709,7 +778,7 @@ public:
                         }
                     }
                 }
-                return;
+                done = true;
                 break;
             case _SC('('):
                 switch(_es.etype) {
@@ -736,8 +805,20 @@ public:
                 Lex();
                 FunctionCallArgs();
                 break;
-            default: return;
+            default: 
+                done = true; 
+                break;
             }
+        }
+
+        if (!null_jumps.empty()) {
+            _fs->AddInstruction(_OP_JMP, 0, 0);
+            SQInteger jmp_end = _fs->GetCurrentPos();
+            for (SQUnsignedInteger i = 0; i < null_jumps.size(); ++i) {
+                _fs->SetInstructionParam(null_jumps[i], 1, _fs->GetCurrentPos() - null_jumps[i]);
+            }
+            _fs->AddInstruction(_OP_LOADNULLS, _fs->TopTarget(), 1);
+            _fs->SetInstructionParam(jmp_end, 1, _fs->GetCurrentPos() - jmp_end);
         }
     }
 

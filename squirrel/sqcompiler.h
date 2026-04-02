@@ -77,6 +77,9 @@ struct SQVM;
 #define TK_TEMPLATE_EXPRESSION_START 329
 #define TK_TEMPLATE_EXPRESSION_END 330
 #define TK_TEMPLATE_STRING_END 331
+#define TK_NULLCOALESCE 332
+#define TK_OPT_DOT 333
+#define TK_OPT_BRACKET 334
 
 
 typedef void(*CompilerErrorFunc)(void *ud, const SQChar *s);

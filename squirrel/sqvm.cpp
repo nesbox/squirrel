@@ -1026,6 +1026,12 @@ exception_restore:
                     ci->_ip += (sarg1);
                 }
                 continue;
+            case _OP_NULLCOALESCE:
+                if(sq_type(STK(arg2)) != OT_NULL) {
+                    TARGET = STK(arg2);
+                    ci->_ip += (sarg1);
+                }
+                continue;
             case _OP_NEG: _GUARD(NEG_OP(TARGET,STK(arg1))); continue;
             case _OP_NOT: TARGET = IsFalse(STK(arg1)); continue;
             case _OP_BWNOT:

@@ -21,6 +21,9 @@ New features
 - **enum** will use previous integer value incremented by one to assign next value
 - **classof** new operator for checking if class extends another class, or is a given class
 - **string interpolation** new string expression identical to **JS**.
+- **nullish coalising** `??` operator support.
+- **optional chaining** `?.` operator support.
+- **optional chaining** `?[]` operator support.
 
 ==================
 New functionality

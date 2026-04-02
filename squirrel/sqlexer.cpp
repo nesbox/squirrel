@@ -261,9 +261,15 @@ SQInteger SQLexer::Lex()
         }
 
         case _SC('}'): case _SC('('): case _SC(')'): case _SC('['): case _SC(']'):
-        case _SC(';'): case _SC(','): case _SC('?'): case _SC('^'): case _SC('~'):
+        case _SC(';'): case _SC(','): case _SC('^'): case _SC('~'):
             {SQInteger ret = CUR_CHAR;
             NEXT(); RETURN_TOKEN(ret); }
+        case _SC('?'):
+            NEXT();
+            if (CUR_CHAR == _SC('?')){ NEXT(); RETURN_TOKEN(TK_NULLCOALESCE); }
+            else if (CUR_CHAR == _SC('.')){ NEXT(); RETURN_TOKEN(TK_OPT_DOT); }
+            else if (CUR_CHAR == _SC('[')){ NEXT(); RETURN_TOKEN(TK_OPT_BRACKET); }
+            else { RETURN_TOKEN('?'); }
         case _SC('.'):
             NEXT();
             if (CUR_CHAR != _SC('.')){ RETURN_TOKEN('.') }

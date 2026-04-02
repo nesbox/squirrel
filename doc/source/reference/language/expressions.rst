@@ -123,15 +123,38 @@ Logical
     exp := exp op exp
     exp := '!' exp
 
-Logical operators in Squirrel are : ``&&, ||, !``
+Logical operators in Squirrel are : ``&&, ||, !, ??``
 
-The operator ``&&`` (logical and) returns null if its first argument is null, otherwise returns
-its second argument.
-The operator ``||`` (logical or) returns its first argument if is different than null, otherwise
-returns the second argument.
+The operator ``&&`` (logical and) returns its first argument if it is "false" (null, 0, 0.0, or false), otherwise returns its second argument.
 
-The '!' operator will return null if the given value to negate was different than null, or a
-value different than null if the given value was null.
+The operator ``||`` (logical or) returns its first argument if it is "true" (not null, 0, 0.0, or false), otherwise returns the second argument.
+
+The operator ``??`` (null coalescing) returns its first argument if it is **not** null, otherwise returns the second argument. Unlike ``||``, it only treats **null** as falsey.
+
+The '!' operator will return true if the given value to negate was "false", or false if the given value was "true".
+
+^^^^^^^^^^^^^^^^^^^
+Optional Chaining
+^^^^^^^^^^^^^^^^^^^
+
+.. index::
+    pair: Optional Chaining; Operators
+
+::
+
+    exp := obj_exp '?.' field_id
+    exp := obj_exp '?[' key_exp ']'
+
+The optional chaining operators allow safe access to table slots or class members. 
+If the *obj_exp* evaluates to **null**, the entire expression evaluates to **null** without throwing an error.
+Additionally, if the *obj_exp* is a table or class but the requested field does not exist, it also evaluates to **null** safely.
+
+Optional chaining can be nested::
+
+    local val = obj?.sub?.field;
+
+If any element in the chain is null or missing, the result is null.
+Note: Optional chaining cannot be used with mutating operators like ``++`` or ``--``, and currently does not support optional function calls.
 
 ^^^^^^^^^^^^^^^
 in operator
@@ -248,29 +271,38 @@ Operators precedence
 .. index::
     pair: Operators precedence; Operators
 
-+---------------------------------------+-----------+
-| ``-, ~, !, typeof , ++, --``          | highest   |
-+---------------------------------------+-----------+
-| ``/, *, %``                           | ...       |
-+---------------------------------------+-----------+
-| ``+, -``                              |           |
-+---------------------------------------+-----------+
-| ``<<, >>, >>>``                       |           |
-+---------------------------------------+-----------+
-| ``<, <=, >, >=, classof, instanceof`` |           |
-+---------------------------------------+-----------+
-| ``==, !=, <=>``                       |           |
-+---------------------------------------+-----------+
-| ``&``                                 |           |
-+---------------------------------------+-----------+
-| ``^``                                 |           |
-+---------------------------------------+-----------+
-| ``&&, in``                            |           |
-+---------------------------------------+-----------+
-| ``+=, =, -=, /=, *=, %=``             | ...       |
-+---------------------------------------+-----------+
-| ``, (comma operator)``                | lowest    |
-+---------------------------------------+-----------+
++----------------------------------------------------+-----------+
+| ``., ?., [ ], ?[ ], ( ), -, ~, !, typeof, ++, --,  | highest   |
+| clone``                                            |           |
++----------------------------------------------------+-----------+
+| ``/, *, %``                                        | ...       |
++----------------------------------------------------+-----------+
+| ``+, -``                                           |           |
++----------------------------------------------------+-----------+
+| ``<<, >>, >>>``                                    |           |
++----------------------------------------------------+-----------+
+| ``<, <=, >, >=, in, classof, instanceof``          |           |
++----------------------------------------------------+-----------+
+| ``==, !=, <=>``                                    |           |
++----------------------------------------------------+-----------+
+| ``&``                                              |           |
++----------------------------------------------------+-----------+
+| ``^``                                              |           |
++----------------------------------------------------+-----------+
+| ``|``                                              |           |
++----------------------------------------------------+-----------+
+| ``&&``                                             |           |
++----------------------------------------------------+-----------+
+| ``||``                                             |           |
++----------------------------------------------------+-----------+
+| ``??``                                             |           |
++----------------------------------------------------+-----------+
+| ``?:``                                             |           |
++----------------------------------------------------+-----------+
+| ``+=, =, -=, /=, *=, %=, <-``                      | ...       |
++----------------------------------------------------+-----------+
+| ``, (comma operator)``                             | lowest    |
++----------------------------------------------------+-----------+
 
 .. _table_constructor:
 
