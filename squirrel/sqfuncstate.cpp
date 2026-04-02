@@ -74,7 +74,9 @@ SQInstructionDesc g_InstrDesc[]={
     {_SC("_OP_GETBASE")},
     {_SC("_OP_CLOSE")},
     {_SC("_OP_CLASSOF")},
+    {_SC("_OP_NULLCOALESCE")}
 };
+
 #endif
 void DumpLiteral(SQObjectPtr &o)
 {
