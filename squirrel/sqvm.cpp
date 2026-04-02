@@ -938,8 +938,23 @@ exception_restore:
             continue;
             case _OP_NEWOBJ:
                 switch(arg3) {
-                    case NOT_TABLE: TARGET = SQTable::Create(_ss(this), arg1); continue;
-                    case NOT_ARRAY: TARGET = SQArray::Create(_ss(this), 0); _array(TARGET)->Reserve(arg1); continue;
+                    case NOT_TABLE: {
+                        TARGET = SQTable::Create(_ss(this), arg1);
+                        SQTable *tbl = _table(TARGET);
+                        SQFunctionProto *fp = _closure(ci->_closure)->_function;
+                        tbl->_created_src = fp->_sourcename._unVal.pString->_val;
+                        tbl->_created_line = fp->GetLine(ci->_ip - 1);
+                        continue;
+                    }
+                    case NOT_ARRAY: {
+                        TARGET = SQArray::Create(_ss(this), 0);
+                        SQArray *arr = _array(TARGET);
+                        arr->Reserve(arg1);
+                        SQFunctionProto *fp = _closure(ci->_closure)->_function;
+                        arr->_created_src = fp->_sourcename._unVal.pString->_val;
+                        arr->_created_line = fp->GetLine(ci->_ip - 1);
+                        continue;
+                    }
                     case NOT_CLASS: _GUARD(CLASS_OP(TARGET,arg1,arg2)); continue;
                     default: assert(0); continue;
                 }

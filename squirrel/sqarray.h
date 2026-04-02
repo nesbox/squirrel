@@ -2,10 +2,12 @@
 #ifndef _SQARRAY_H_
 #define _SQARRAY_H_
 
+#include <string>
+
 struct SQArray : public CHAINABLE_OBJ
 {
 private:
-    SQArray(SQSharedState *ss,SQInteger nsize){_values.resize(nsize); INIT_CHAIN();ADD_TO_CHAIN(&_ss(this)->_gc_chain,this);}
+    SQArray(SQSharedState *ss,SQInteger nsize){_values.resize(nsize); INIT_CHAIN();ADD_TO_CHAIN(&_ss(this)->_gc_chain,this);_created_line = 0;}
     ~SQArray()
     {
         REMOVE_FROM_CHAIN(&_ss(this)->_gc_chain,this);
@@ -90,5 +92,7 @@ public:
     }
 
     SQObjectPtrVec _values;
+    std::string _created_src;
+    SQInteger _created_line;
 };
 #endif //_SQARRAY_H_

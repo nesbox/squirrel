@@ -8,7 +8,7 @@
 */
 
 #include "sqstring.h"
-
+#include <string>
 
 #define hashptr(p)  ((SQHash)(((SQInteger)p) >> 3))
 
@@ -104,6 +104,9 @@ public:
     {
         sq_delete(this, SQTable);
     }
+
+    std::string _created_src;
+    SQInteger _created_line;
 
 };
 

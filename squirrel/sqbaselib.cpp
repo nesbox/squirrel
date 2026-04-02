@@ -487,7 +487,26 @@ static SQInteger base_getminsizecontainers(HSQUIRRELVM v)
     SQObjectPtr res_array_obj = SQArray::Create(_ss(v), 0);
     SQArray *res_array = _array(res_array_obj);
     for(const auto& item : containers) {
-        res_array->Append(item.second);
+        SQObjectPtr info_obj = SQTable::Create(_ss(v), 0);
+        SQTable *info = _table(info_obj);
+        
+        info->NewSlot(SQString::Create(_ss(v), _SC("container")), item.second);
+        info->NewSlot(SQString::Create(_ss(v), _SC("size")), item.first);
+        
+        std::string src;
+        SQInteger line = 0;
+        if(sq_type(item.second) == OT_TABLE) {
+            src = _table(item.second)->_created_src;
+            line = _table(item.second)->_created_line;
+        } else {
+            src = _array(item.second)->_created_src;
+            line = _array(item.second)->_created_line;
+        }
+        
+        info->NewSlot(SQString::Create(_ss(v), _SC("src")), SQString::Create(_ss(v), _SC(src.data())));
+        info->NewSlot(SQString::Create(_ss(v), _SC("line")), line);
+        
+        res_array->Append(info_obj);
     }
 
     v->Push(res_array_obj);
