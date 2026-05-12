@@ -913,11 +913,16 @@ public:
                     SQObjectPtr constval;
                     SQObject    constid;
                     if(sq_type(constant) == OT_TABLE) {
-                        Expect('.');
-                        constid = Expect(TK_IDENTIFIER);
-                        if(!_table(constant)->Get(constid, constval)) {
-                            constval.Null();
-                            Error(_SC("invalid constant [%s.%s]"), _stringval(id), _stringval(constid));
+                        if(_token == '.') {
+                            Lex();
+                            constid = Expect(TK_IDENTIFIER);
+                            if(!_table(constant)->Get(constid, constval)) {
+                                constval.Null();
+                                Error(_SC("invalid constant [%s.%s]"), _stringval(id), _stringval(constid));
+                            }
+                        }
+                        else {
+                            constval = constant;
                         }
                     }
                     else {

@@ -19,6 +19,7 @@ New features
 - **_get** metamethod will also affect **in** operator
 - **class instances** now support **foreach** iteration
 - **enum** will use previous integer value incremented by one to assign next value
+- **enum** can now be retrieved as table, useful for iterating over it's values
 - **classof** new operator for checking if class extends another class, or is a given class
 - **string interpolation** new string expression identical to **JS**.
 - **nullish coalising** `??` operator support.
