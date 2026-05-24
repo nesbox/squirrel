@@ -40,7 +40,6 @@ void printfunc(HSQUIRRELVM SQ_UNUSED_ARG(v),const SQChar *s,...)
     va_list vl;
     va_start(vl, s);
     scvprintf(stdout, s, vl);
-    scfprintf(stdout, "\n");
     va_end(vl);
 }
 
@@ -49,7 +48,6 @@ void errorfunc(HSQUIRRELVM SQ_UNUSED_ARG(v),const SQChar *s,...)
     va_list vl;
     va_start(vl, s);
     scvprintf(stderr, s, vl);
-    scfprintf(stderr, "\n");
     va_end(vl);
 }
 
